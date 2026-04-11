@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Deltarune Text Dump</title>
+        
+        <link
+            rel="shortcut icon"
+            type="image/png"
+            href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgBAMAAACB
+            VGfHAAAAD1BMVEUAAADAgiYAAACFSh3AgibGPmPhAAAAAnRSTlMAAHaTzTgAAACXSURB
+            VCiRhZHLDYRADEN9oISt4I0rQBQAGfdf0x6AhVntxzc/OXGkSH/1yKBNDwZtqhH4E5gv
+            27CK5Eg5OUAfQXN2kJr3pUnRZpwcLUt6S+Yl/axt5aTcb3f4rPoKSH6c/g90gAIwwKIJ
+            ICQEYNUEOLhIAatU4JTLKbC0z+B9+Srp3mPpFbkCUk6f81l58we5eSnJ4H/pCVYTQjf3
+            DYm9AAAAAElFTkSuQmCC"
+        />
+        
+        <script src="rendered.json.js"></script>
+        
+        <style>
+            @font-face {
+                font-family: 'Deltarune Font';
+                src: url('./gulim-13px.ttf') format('truetype');
+                font-weight: normal;
+                font-display: swap;
+            }
+
+            :root {
+                --base-font-size: 16px;
+                --bg-color: #121212;
+                --text-color: #e0e0e0;
+                --panel-bg: #1e1e1e;
+                --btn-bg: #2d2d2d;
+                --btn-hover: #3d3d3d;
+                --border-color: #404040;
+                --accent-color: #5a9fd4;
+            }
+
+            body.light {
+                --bg-color: #fdfdfd;
+                --text-color: #1a1a1a;
+                --panel-bg: #f0f0f0;
+                --btn-bg: #e0e0e0;
+                --btn-hover: #d0d0d0;
+                --border-color: #cccccc;
+                --accent-color: #005bb5;
+            }
+
+            body {
+                background: var(--bg-color);
+                color: var(--text-color);
+                font-family: sans-serif;
+                margin: 0;
+                line-height: 1.3em;
+                overflow-wrap: break-word;
+                font-size: var(--base-font-size);
+            }
+
+            div.intro {
+                background: var(--panel-bg);
+                padding: 15px 20px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            button, select, input[type="text"] {
+                background: var(--btn-bg);
+                color: var(--text-color);
+                border: 1px solid var(--border-color);
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 0.95em;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                outline: none;
+                font-family: sans-serif;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+
+            button:hover, select:hover {
+                background: var(--btn-hover);
+                border-color: var(--accent-color);
+            }
+
+            input[type="text"]:focus {
+                border-color: var(--accent-color);
+                box-shadow: 0 0 0 2px rgba(90, 159, 212, 0.2);
+            }
+
+            svg {
+                width: 18px;
+                height: 18px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            label {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                cursor: pointer;
+                font-size: 0.9em;
+            }
+
+            .menu-toggle {
+                display: none;
+                width: 100%;
+                padding: 12px;
+                font-weight: bold;
+            }
+
+            .controls-wrapper {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .control-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                align-items: center;
+            }
+
+            .control-group {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                background: rgba(0, 0, 0, 0.1);
+                padding: 6px 10px;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+            }
+
+            .search-wrapper {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .search-wrapper svg {
+                position: absolute;
+                left: 10px;
+                width: 16px;
+                height: 16px;
+                opacity: 0.6;
+            }
+
+            .search-wrapper input {
+                padding-left: 32px;
+                width: 200px;
+            }
+
+            @media (max-width: 768px) {
+                .menu-toggle { display: flex; }
+                .controls-wrapper { display: none; padding-top: 15px; }
+                .controls-wrapper.open { display: flex; }
+                .control-row, .control-group { flex-direction: column; align-items: stretch; }
+                .search-wrapper input { width: 100%; }
+            }
+
+            h1, h2 {
+                font-size: 2em;
+                line-height: 1em;
+                font-weight: normal;
+                padding-left: 20px;
+                margin-top: 30px;
+                margin-bottom: 15px;
+                font-family: "Deltarune Font", Monospace;
+            }
+
+            h1 a, h2 a {
+                color: var(--text-color);
+                text-decoration: none;
+            }
+
+            span.breakable { word-break: break-all; }
+
+            .msg-group {
+                position: relative;
+                padding-left: 40px;
+                margin-bottom: 12px;
+                border-bottom: 1px dashed var(--border-color);
+                padding-bottom: 12px;
+                content-visibility: auto;
+                contain-intrinsic-size: auto 40px;
+            }
+
+            #textboxes.grid-view .msg-group {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 20px;
+            }
+
+            div.textbox {
+                white-space: pre-wrap;
+                padding: 5px 0;
+                font-family: "Deltarune Font", Monospace;
+            }
+
+            div.untranslated {
+                color: #ff6b6b;
+                background: rgba(255, 0, 0, 0.05);
+                border-left: 4px solid #ff6b6b;
+                padding-left: 10px;
+                font-style: italic;
+            }
+
+            .copy-link-btn {
+                position: absolute;
+                left: 5px;
+                top: 8px;
+                cursor: pointer;
+                background: transparent;
+                border: none;
+                padding: 5px;
+                border-radius: 4px;
+                opacity: 0;
+                transition: all 0.2s;
+                user-select: none;
+                -webkit-user-select: none;
+                pointer-events: none;
+            }
+
+            .copy-link-btn svg {
+                width: 16px;
+                height: 16px;
+                fill: var(--text-color);
+                stroke: none;
+            }
+
+            .msg-group:hover .copy-link-btn {
+                opacity: 0.4;
+                pointer-events: auto;
+            }
+
+            .copy-link-btn:hover {
+                opacity: 1;
+                background: var(--btn-hover);
+            }
+
+            #top-btn {
+                position: fixed;
+                bottom: 25px;
+                right: 25px;
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                font-size: 1.2em;
+                display: none;
+                z-index: 1000;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            }
+
+            pre.loading { font-family: "Deltarune Font", Monospace; padding: 20px; }
+            div.indented { margin: 0; padding-left: 16px; text-indent: -16px; }
+
+            span.R { color: #ff5555; } span.B { color: #5555ff; } span.Y { color: #ffff55; }
+            span.G { color: #55ff55; } span.O { color: #ffaa55; } span.A { color: #55ffff; }
+            span.S { color: #ff55ff; } span.V { color: #aaffaa; } span.I { color: #aaccff; }
+
+            body.light span.Y, body.light span.G, body.light span.A, body.light span.V, body.light span.S, body.light span.I {
+                -webkit-text-stroke: 1px var(--text-color);
+                paint-order: stroke fill;
+            }
+            span.picture, span.param { background: var(--text-color); color: var(--bg-color); }
+        </style>
+    </head>
+
+    <body>
+        <div class="intro">
+            <button class="menu-toggle" id="menu-toggle">
+                <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                Menu
+            </button>
+            
+            <div class="controls-wrapper" id="controls-wrapper">
+                <div class="control-row" id="lang-controls"></div>
+
+                <div class="control-row">
+                    <div class="control-group">
+                        <select id="chapter" name="chapter">
+                            <option value="all">All Chapters</option>
+                            <option value="1">Chapter 1</option>
+                            <option value="2">Chapter 2</option>
+                            <option value="3">Chapter 3</option>
+                            <option value="4">Chapter 4</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="search-wrapper">
+                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="search-box" placeholder="Search...">
+                        </div>
+                        <label title="Regular Expression" style="font-family: monospace; font-weight: bold; padding: 0 5px;">
+                            <input type="checkbox" id="regex-toggle"> .*
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <button type="button" id="view-toggle" title="Grid View">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18" rx="1"></rect><rect x="14" y="3" width="7" height="18" rx="1"></rect></svg>
+                        </button>
+                        
+                        <div style="display:flex; gap:4px; margin-left: 8px;">
+                            <button type="button" id="font-decrease" title="Decrease Font Size" style="font-weight:bold; width: 36px;">A-</button>
+                            <button type="button" id="font-increase" title="Increase Font Size" style="font-weight:bold; width: 36px;">A+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <button type="button" id="light-mode-toggle" title="Toggle Theme">
+                            <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="txt-downloads" style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.9em; margin-top:5px;"></div>
+            </div>
+        </div>
+
+        <div id="textboxes">
+            <pre class="loading">Loading...</pre>
+        </div>
+        
+        <button id="top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+        </button>
+
+        <script>
+            "use strict";
+
+            const langsAvailable = window.availableLangs || ["en", "ja"];
+            const text = window.rendered;
+            
+            const langControls = document.getElementById("lang-controls");
+            const txtDownloads = document.getElementById("txt-downloads");
+            const langElems = {};
+            
+            const displayNames = {
+                de: "Deutsch",
+                en: "English",
+                es: "Español",
+                ja: "日本語",
+                ko: "한국어",
+                pl: "Polski",
+                "pt-BR": "Português",
+                ru: "Русский",
+                zh: "中文"
+            };
+
+            const langFrag = document.createDocumentFragment();
+            langsAvailable.forEach(l => {
+                const label = document.createElement("label");
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox"; 
+                checkbox.value = l;
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(" " + (displayNames[l] || l.toUpperCase())));
+                langFrag.appendChild(label);
+                langElems[l] = checkbox;
+                checkbox.addEventListener('change', updateLangUrlAndRender);
+
+                const a = document.createElement("a");
+                a.href = `DELTARUNE_${l}.txt`; 
+                a.target = "_blank";
+                a.style.color = "var(--text-color)";
+                a.style.textDecoration = "none";
+                a.style.display = "flex";
+                a.style.alignItems = "center";
+                a.style.gap = "4px";
+                a.innerHTML = `<svg style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg> ${displayNames[l] || l.toUpperCase()}`;
+                
+                txtDownloads.appendChild(a);
+            });
+            langControls.appendChild(langFrag);
+
+            document.getElementById("menu-toggle").addEventListener("click", () => {
+                document.getElementById("controls-wrapper").classList.toggle("open");
+            });
+
+            document.getElementById("light-mode-toggle").addEventListener("click", () => {
+                document.body.classList.toggle("light");
+                localStorage.setItem("drLightMode", document.body.classList.contains("light"));
+            });
+            if (localStorage.getItem("drLightMode") === "true") document.body.classList.add("light");
+
+            let currentFontSize = parseInt(localStorage.getItem("drFontSize")) || 16;
+            document.documentElement.style.setProperty('--base-font-size', currentFontSize + 'px');
+            
+            document.getElementById("font-increase").addEventListener("click", () => changeFontSize(2));
+            document.getElementById("font-decrease").addEventListener("click", () => changeFontSize(-2));
+            
+            function changeFontSize(delta) {
+                currentFontSize += delta;
+                document.documentElement.style.setProperty('--base-font-size', currentFontSize + 'px');
+                localStorage.setItem("drFontSize", currentFontSize);
+            }
+
+            const textboxesContainer = document.getElementById("textboxes");
+            const viewToggleBtn = document.getElementById("view-toggle");
+            
+            if(localStorage.getItem("drGridView") === "true") toggleGridView(true);
+
+            viewToggleBtn.addEventListener("click", () => toggleGridView());
+            
+            function toggleGridView(force) {
+                const isGrid = force !== undefined ? force : !textboxesContainer.classList.contains("grid-view");
+                textboxesContainer.classList.toggle("grid-view", isGrid);
+                localStorage.setItem("drGridView", isGrid);
+                viewToggleBtn.style.background = isGrid ? "var(--accent-color)" : "";
+                viewToggleBtn.style.color = isGrid ? "#fff" : "";
+            }
+
+            window.addEventListener("scroll", () => {
+                document.getElementById("top-btn").style.display = window.scrollY > 300 ? "flex" : "none";
+            });
+
+            document.getElementById("search-box").addEventListener("input", applyFilters);
+            document.getElementById("regex-toggle").addEventListener("change", applyFilters);
+
+            function copyDeepLink(msgId) {
+                const url = new URL(window.location.href);
+                url.hash = `msg-${msgId}`;
+                navigator.clipboard.writeText(url.toString());
+            }
+
+            const config = { chap: 'all', langs: [] };
+            
+            document.getElementById("chapter").addEventListener("change", (e) => {
+                config.chap = e.target.value;
+                updateUrlAndRender();
+            });
+
+            function updateLangUrlAndRender() {
+                const selectedLangs = langsAvailable.filter(l => langElems[l].checked);
+                if (selectedLangs.length === 0) selectedLangs.push(langsAvailable[0]);
+                config.langs = selectedLangs;
+                updateUrlAndRender();
+            }
+
+            function updateUrlAndRender() {
+                const newURL = new URL(window.location.href);
+                if (config.chap === "all") newURL.searchParams.delete("chap");
+                else newURL.searchParams.set("chap", config.chap);
+                newURL.searchParams.set('lang', config.langs.join(','));
+                window.history.pushState({}, '', newURL);
+                render();
+            }
+
+            function loadConfigFromURL() {
+                const params = new URLSearchParams(window.location.search);
+                config.chap = params.get("chap") || "all";
+                document.getElementById("chapter").value = config.chap;
+
+                const langParam = params.get('lang');
+                let selected = langParam ? langParam.split(',') : (langsAvailable.includes('en') ? ['en'] : [langsAvailable[0]]);
+                config.langs = selected;
+
+                langsAvailable.forEach(l => {
+                    if(langElems[l]) langElems[l].checked = config.langs.includes(l);
+                });
+            }
+
+            function applyFilters() {
+                const searchTerm = document.getElementById("search-box").value.toLowerCase();
+                const useRegex = document.getElementById("regex-toggle").checked;
+                
+                let regex = null;
+                if(useRegex && searchTerm) {
+                    try { regex = new RegExp(searchTerm, 'i'); } 
+                    catch(e) { regex = null; }
+                }
+
+                const groups = document.querySelectorAll(".msg-group");
+                groups.forEach(group => {
+                    let isMatch = true;
+                    const plainText = group.getAttribute('data-text');
+
+                    if(searchTerm) {
+                        if(regex) isMatch = regex.test(plainText);
+                        else isMatch = plainText.includes(searchTerm);
+                    }
+
+                    group.style.display = isMatch ? "" : "none";
+                });
+            }
+
+            const linkIcon = `<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+
+            let curRendered = null;
+            function render() {
+                if (!text) return;
+                
+                const thisRender = `${config.chap}:${config.langs.join('+')}`;
+                if (thisRender === curRendered) {
+                    applyFilters();
+                    return;
+                }
+
+                const htmlBuffer = [];
+
+                for (let chap = 1; chap <= 4; chap++) {
+                    if (config.chap !== String(chap) && config.chap !== "all") continue;
+                    const chapterData = text[chap];
+                    if (!chapterData) continue;
+
+                    htmlBuffer.push(`<h1 id="${chap}"><a href="#${chap}">Chapter ${chap}</a></h1>`);
+
+                    for (const groupName in chapterData) {
+                        const group = chapterData[groupName];
+                        let titleAdded = false;
+
+                        for (const msgId in group) {
+                            let groupContent = "";
+                            let combinedTextForSearch = "";
+
+                            for (let i = 0; i < config.langs.length; i++) {
+                                const lang = config.langs[i];
+                                let msg = group[msgId][lang];
+                                
+                                if (msg === undefined) continue;
+
+                                let className = `textbox ${lang}`;
+                                if (msg === null) {
+                                    className += " untranslated";
+                                    msg = `[ NULL ]`;
+                                } else {
+                                    combinedTextForSearch += msg.replace(/<[^>]*>?/gm, '').toLowerCase() + " ";
+                                }
+
+                                groupContent += `<div class="${className}" lang="${lang}">${msg}</div>`;
+                            }
+
+                            if (groupContent !== "") {
+                                if (!titleAdded) {
+                                    const finalH2Text = groupName.replace(/_slash_/g, "/").replace(/_/g, '<span class="breakable">_</span>');
+                                    htmlBuffer.push(`<h2 id="${chap}_${groupName}"><a href="#${chap}_${groupName}">${finalH2Text}</a></h2>`);
+                                    titleAdded = true;
+                                }
+
+                                htmlBuffer.push(`
+                                    <div class="msg-group" id="msg-${msgId}" data-text="${combinedTextForSearch.replace(/"/g, '&quot;')}">
+                                        <button class="copy-link-btn" onclick="copyDeepLink('${msgId}')" title="Copy Link">${linkIcon}</button>
+                                        ${groupContent}
+                                    </div>
+                                `);
+                            }
+                        }
+                    }
+                }
+
+                textboxesContainer.innerHTML = htmlBuffer.join("");
+                curRendered = thisRender;
+
+                applyFilters();
+                
+                setTimeout(() => {
+                    if(window.location.hash) {
+                        const target = document.getElementById(window.location.hash.substring(1));
+                        if(target) target.scrollIntoView({behavior: 'smooth', block: 'center'});
+                    }
+                }, 100);
+            }
+
+            loadConfigFromURL();
+            render();
+            
+            window.addEventListener("popstate", () => {
+                loadConfigFromURL();
+                render();
+            });
+        </script>
+    </body>
+</html>
