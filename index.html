@@ -432,7 +432,12 @@
                 document.getElementById("top-btn").style.display = window.scrollY > 300 ? "flex" : "none";
             });
 
-            document.getElementById("search-box").addEventListener("input", applyFilters);
+            // 검색 최적화: 타이핑 할 때마다 렌더링해서 뻗는 걸 막기 위한 디바운스 적용
+            let searchTimeout;
+            document.getElementById("search-box").addEventListener("input", () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 300);
+            });
             document.getElementById("regex-toggle").addEventListener("change", applyFilters);
 
             function copyDeepLink(msgId) {
@@ -483,28 +488,71 @@
                 const useRegex = document.getElementById("regex-toggle").checked;
                 
                 let regex = null;
-                if(useRegex && searchTerm) {
+                if (useRegex && searchTerm) {
                     try { regex = new RegExp(searchTerm, 'i'); } 
                     catch(e) { regex = null; }
                 }
 
-                const groups = document.querySelectorAll(".msg-group");
-                groups.forEach(group => {
-                    let isMatch = true;
-                    const plainText = group.getAttribute('data-text');
+                // 새롭게 렌더링된 컨테이너 가져오기
+                const container = document.getElementById("render-content");
+                if (!container) return;
 
-                    if(searchTerm) {
-                        if(regex) isMatch = regex.test(plainText);
-                        else isMatch = plainText.includes(searchTerm);
+                let currentH1 = null;
+                let currentH2 = null;
+                
+                // H1과 H2가 하위에 검색 결과를 1개라도 가지는지 추적하기 위한 Map
+                const visibility = new Map();
+
+                const elements = container.children;
+                
+                // 1. 요소들을 순회하며 검색어 매칭 및 부모(H1, H2) 표시 여부 결정
+                for (let i = 0; i < elements.length; i++) {
+                    const el = elements[i];
+                    
+                    if (el.tagName === 'H1') {
+                        currentH1 = el;
+                        visibility.set(currentH1, false); // 일단 안 보이는 상태로 설정
+                    } else if (el.tagName === 'H2') {
+                        currentH2 = el;
+                        visibility.set(currentH2, false); // 일단 안 보이는 상태로 설정
+                    } else if (el.classList.contains('msg-group')) {
+                        let isMatch = true;
+                        const plainText = el.getAttribute('data-text');
+
+                        // 검색어가 있을 경우 매칭 검사
+                        if (searchTerm) {
+                            if (regex) isMatch = regex.test(plainText);
+                            else isMatch = plainText.includes(searchTerm);
+                        }
+
+                        el.style.display = isMatch ? "" : "none";
+
+                        // 매칭된 메시지가 하나라도 있으면, 속해있는 H1과 H2를 화면에 보여주도록 마킹
+                        if (isMatch) {
+                            if (currentH1) visibility.set(currentH1, true);
+                            if (currentH2) visibility.set(currentH2, true);
+                        }
                     }
+                }
 
-                    group.style.display = isMatch ? "" : "none";
-                });
+                // 2. 결정된 가시성 상태를 실제 H1, H2 요소에 적용
+                for (let i = 0; i < elements.length; i++) {
+                    const el = elements[i];
+                    if (el.tagName === 'H1' || el.tagName === 'H2') {
+                        if (!searchTerm) {
+                            el.style.display = ""; // 검색어가 비어있으면 무조건 전부 표시
+                        } else {
+                            el.style.display = visibility.get(el) ? "" : "none";
+                        }
+                    }
+                }
             }
 
             const linkIcon = `<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
 
             let curRendered = null;
+            let renderStateId = 0; // 로딩 도중 다른 옵션을 클릭했을 때 이전 렌더링을 취소하기 위한 ID
+
             function render() {
                 if (!text) return;
                 
@@ -514,69 +562,132 @@
                     return;
                 }
 
-                const htmlBuffer = [];
+                renderStateId++;
+                const currentRenderId = renderStateId;
 
+                // 로딩 바 UI 생성
+                textboxesContainer.innerHTML = `
+                    <div id="loading-container" style="padding: 40px 20px; max-width: 600px; margin: 0 auto; text-align: center;">
+                        <h2 style="margin-bottom: 15px; font-family: sans-serif;">Loading Text Data...</h2>
+                        <div style="width: 100%; height: 10px; background: var(--border-color); border-radius: 5px; overflow: hidden;">
+                            <div id="loading-bar" style="width: 0%; height: 100%; background: var(--accent-color); transition: width 0.1s ease-out;"></div>
+                        </div>
+                        <p id="loading-text" style="margin-top: 10px; font-family: monospace;">0%</p>
+                    </div>
+                    <div id="render-content"></div>
+                `;
+
+                const renderContent = document.getElementById("render-content");
+                const loadingBar = document.getElementById("loading-bar");
+                const loadingText = document.getElementById("loading-text");
+                const loadingContainer = document.getElementById("loading-container");
+
+                // 렌더링 해야 할 데이터를 1차원 배열(Tasks)로 평탄화
+                const tasks = [];
                 for (let chap = 1; chap <= 4; chap++) {
                     if (config.chap !== String(chap) && config.chap !== "all") continue;
                     const chapterData = text[chap];
                     if (!chapterData) continue;
 
-                    htmlBuffer.push(`<h1 id="${chap}"><a href="#${chap}">Chapter ${chap}</a></h1>`);
+                    tasks.push({ isChap: true, chap });
 
                     for (const groupName in chapterData) {
-                        const group = chapterData[groupName];
-                        let titleAdded = false;
-
-                        for (const msgId in group) {
-                            let groupContent = "";
-                            let combinedTextForSearch = "";
-
-                            for (let i = 0; i < config.langs.length; i++) {
-                                const lang = config.langs[i];
-                                let msg = group[msgId][lang];
-                                
-                                if (msg === undefined) continue;
-
-                                let className = `textbox ${lang}`;
-                                if (msg === null) {
-                                    className += " untranslated";
-                                    msg = `[ NULL ]`;
-                                } else {
-                                    combinedTextForSearch += msg.replace(/<[^>]*>?/gm, '').toLowerCase() + " ";
-                                }
-
-                                groupContent += `<div class="${className}" lang="${lang}">${msg}</div>`;
-                            }
-
-                            if (groupContent !== "") {
-                                if (!titleAdded) {
-                                    const finalH2Text = groupName.replace(/_slash_/g, "/").replace(/_/g, '<span class="breakable">_</span>');
-                                    htmlBuffer.push(`<h2 id="${chap}_${groupName}"><a href="#${chap}_${groupName}">${finalH2Text}</a></h2>`);
-                                    titleAdded = true;
-                                }
-
-                                htmlBuffer.push(`
-                                    <div class="msg-group" id="msg-${msgId}" data-text="${combinedTextForSearch.replace(/"/g, '&quot;')}">
-                                        <button class="copy-link-btn" onclick="copyDeepLink('${msgId}')" title="Copy Link">${linkIcon}</button>
-                                        ${groupContent}
-                                    </div>
-                                `);
-                            }
-                        }
+                        tasks.push({ isChap: false, chap, groupName, groupData: chapterData[groupName] });
                     }
                 }
 
-                textboxesContainer.innerHTML = htmlBuffer.join("");
-                curRendered = thisRender;
+                const totalTasks = tasks.length;
+                let currentIdx = 0;
+                const chunkSize = 20; // 한 프레임에 처리할 그룹 수 (렉이 걸리면 줄이고, 로딩이 느리면 늘리세요)
 
-                applyFilters();
-                
-                setTimeout(() => {
-                    if(window.location.hash) {
-                        const target = document.getElementById(window.location.hash.substring(1));
-                        if(target) target.scrollIntoView({behavior: 'smooth', block: 'center'});
+                // 비동기 청크 렌더링 함수
+                function processNextChunk() {
+                    // 다른 렌더링이 시작되었으면 현재 루프 종료
+                    if (currentRenderId !== renderStateId) return;
+
+                    let htmlBuffer = "";
+                    const endIdx = Math.min(currentIdx + chunkSize, totalTasks);
+
+                    for (; currentIdx < endIdx; currentIdx++) {
+                        const task = tasks[currentIdx];
+
+                        if (task.isChap) {
+                            htmlBuffer += `<h1 id="${task.chap}"><a href="#${task.chap}">Chapter ${task.chap}</a></h1>`;
+                        } else {
+                            let titleAdded = false;
+                            for (const msgId in task.groupData) {
+                                let groupContent = "";
+                                let combinedTextForSearch = "";
+
+                                for (let i = 0; i < config.langs.length; i++) {
+                                    const lang = config.langs[i];
+                                    let msg = task.groupData[msgId][lang];
+                                    
+                                    if (msg === undefined) continue;
+
+                                    let className = `textbox ${lang}`;
+                                    if (msg === null) {
+                                        className += " untranslated";
+                                        msg = `[ NULL ]`;
+                                    } else {
+                                        combinedTextForSearch += msg.replace(/<[^>]*>?/gm, '').toLowerCase() + " ";
+                                    }
+
+                                    groupContent += `<div class="${className}" lang="${lang}">${msg}</div>`;
+                                }
+
+                                if (groupContent !== "") {
+                                    if (!titleAdded) {
+                                        const finalH2Text = task.groupName.replace(/_slash_/g, "/").replace(/_/g, '<span class="breakable">_</span>');
+                                        htmlBuffer += `<h2 id="${task.chap}_${task.groupName}"><a href="#${task.chap}_${task.groupName}">${finalH2Text}</a></h2>`;
+                                        titleAdded = true;
+                                    }
+
+                                    htmlBuffer += `
+                                        <div class="msg-group" id="msg-${msgId}" data-text="${combinedTextForSearch.replace(/"/g, '&quot;')}">
+                                            <button class="copy-link-btn" onclick="copyDeepLink('${msgId}')" title="Copy Link">${linkIcon}</button>
+                                            ${groupContent}
+                                        </div>
+                                    `;
+                                }
+                            }
+                        }
                     }
-                }, 100);
+
+                    // 생성된 HTML을 실제 DOM에 이어붙임
+                    if (htmlBuffer) {
+                        const tempDiv = document.createElement("div");
+                        tempDiv.innerHTML = htmlBuffer;
+                        while (tempDiv.firstChild) {
+                            renderContent.appendChild(tempDiv.firstChild);
+                        }
+                    }
+
+                    // 로딩 바 진행도 업데이트
+                    const progress = Math.floor((currentIdx / totalTasks) * 100);
+                    loadingBar.style.width = progress + "%";
+                    loadingText.innerText = progress + "%";
+
+                    // 다음 청크 진행
+                    if (currentIdx < totalTasks) {
+                        requestAnimationFrame(processNextChunk); // 브라우저가 숨쉴(렌더링할) 틈을 줌
+                    } else {
+                        // 렌더링 완료 처리
+                        loadingContainer.style.display = "none";
+                        curRendered = thisRender;
+                        applyFilters();
+                        
+                        setTimeout(() => {
+                            if(window.location.hash) {
+                                const target = document.getElementById(window.location.hash.substring(1));
+                                if(target) target.scrollIntoView({behavior: 'smooth', block: 'center'});
+                            }
+                        }, 100);
+                    }
+                }
+
+                // 청크 작업 시작
+                requestAnimationFrame(processNextChunk);
             }
 
             loadConfigFromURL();
