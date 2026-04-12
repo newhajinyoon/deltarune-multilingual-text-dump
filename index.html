@@ -190,6 +190,7 @@
                 padding-bottom: 12px;
                 content-visibility: auto;
                 contain-intrinsic-size: auto 40px;
+                transition: background 0.2s, border-color 0.2s;
             }
 
             #textboxes.grid-view .msg-group {
@@ -212,37 +213,182 @@
                 font-style: italic;
             }
 
-            .copy-link-btn {
+            /* --- 아이콘 버튼 (링크 복사, 텍스트 복사) 그룹 --- */
+            .msg-actions {
                 position: absolute;
                 left: 5px;
-                top: 8px;
-                cursor: pointer;
-                background: transparent;
-                border: none;
-                padding: 5px;
-                border-radius: 4px;
+                top: 5px;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
                 opacity: 0;
                 transition: all 0.2s;
+                z-index: 10;
+            }
+
+            .msg-group:hover .msg-actions {
+                opacity: 0.5;
+            }
+
+            .msg-actions button {
+                background: transparent;
+                border: none;
+                padding: 4px;
+                border-radius: 4px;
+                cursor: pointer;
                 user-select: none;
                 -webkit-user-select: none;
                 pointer-events: none;
+                position: relative;
             }
 
-            .copy-link-btn svg {
+            .msg-actions button svg {
                 width: 16px;
                 height: 16px;
                 fill: var(--text-color);
                 stroke: none;
             }
 
-            .msg-group:hover .copy-link-btn {
-                opacity: 0.4;
+            .msg-actions button:hover {
+                background: var(--btn-hover);
+                opacity: 1 !important;
+            }
+
+            .msg-group:hover .msg-actions button {
                 pointer-events: auto;
             }
 
-            .copy-link-btn:hover {
+            /* 툴팁 (말풍선) CSS */
+            .msg-actions button::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                margin-left: 8px;
+                background: var(--text-color);
+                color: var(--bg-color);
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 0.85em;
+                white-space: nowrap;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s, margin-left 0.2s;
+                font-weight: bold;
+                font-family: sans-serif;
+            }
+
+            .msg-actions button:hover::after {
                 opacity: 1;
-                background: var(--btn-hover);
+                margin-left: 12px;
+            }
+
+            /* 범위 복사 시 선택된 블록 하이라이트 */
+            .msg-group.selected-for-copy {
+                border-left: 4px solid var(--accent-color);
+                background: rgba(90, 159, 212, 0.05);
+            }
+
+            /* --- 목차(ToC) 사이드바 --- */
+            #toc-overlay {
+                position: fixed;
+                top: 0; left: 0; width: 100vw; height: 100vh;
+                background: rgba(0,0,0,0.4);
+                z-index: 1999;
+                display: none;
+                backdrop-filter: blur(2px);
+            }
+
+            #toc-overlay.open { display: block; }
+
+            #toc-sidebar {
+                position: fixed;
+                top: 0;
+                left: -320px;
+                width: 280px;
+                height: 100vh;
+                background: var(--panel-bg);
+                border-right: 1px solid var(--border-color);
+                transition: left 0.3s ease;
+                z-index: 2000;
+                overflow-y: hidden;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+                box-sizing: border-box;
+            }
+
+            #toc-sidebar.open { left: 0; }
+
+            #toc-header {
+                padding: 20px 20px 10px 20px;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            #toc-header h3 {
+                margin: 0 0 10px 0;
+                font-family: sans-serif;
+                color: var(--text-color);
+            }
+
+            #toc-search {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            #toc-list-container {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px 20px 20px 20px;
+            }
+
+            #toc-list {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                font-size: 0.95em;
+            }
+
+            #toc-list li { margin: 8px 0; }
+
+            #toc-list a {
+                color: var(--text-color);
+                text-decoration: none;
+                opacity: 0.8;
+                transition: opacity 0.2s, color 0.2s;
+                display: block;
+            }
+
+            #toc-list a:hover {
+                opacity: 1;
+                color: var(--accent-color);
+            }
+
+            #toc-list ul {
+                list-style: none;
+                padding-left: 15px;
+                border-left: 1px solid var(--border-color);
+                margin-top: 5px;
+            }
+
+            /* --- 토스트 알림 --- */
+            #toast {
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--text-color);
+                color: var(--bg-color);
+                padding: 10px 20px;
+                border-radius: 30px;
+                font-size: 0.9em;
+                font-weight: bold;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+                z-index: 9999;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             }
 
             #top-btn {
@@ -274,11 +420,29 @@
     </head>
 
     <body>
+        <!-- 사이드바 & 오버레이 & 토스트 알림 -->
+        <div id="toc-overlay"></div>
+        <div id="toc-sidebar">
+            <div id="toc-header">
+                <h3>Table of Contents</h3>
+                <input type="text" id="toc-search" placeholder="🔎 Search...">
+            </div>
+            <div id="toc-list-container">
+                <ul id="toc-list"></ul>
+            </div>
+        </div>
+        <div id="toast">Notification Message</div>
+
         <div class="intro">
-            <button class="menu-toggle" id="menu-toggle">
-                <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                Menu
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <button id="toc-toggle-btn" title="Toggle Table of Contents">
+                    <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <button class="menu-toggle" id="menu-toggle">
+                    <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"></path></svg>
+                    Menu
+                </button>
+            </div>
             
             <div class="controls-wrapper" id="controls-wrapper">
                 <div class="control-row" id="lang-controls"></div>
@@ -432,7 +596,6 @@
                 document.getElementById("top-btn").style.display = window.scrollY > 300 ? "flex" : "none";
             });
 
-            // 검색 최적화: 타이핑 할 때마다 렌더링해서 뻗는 걸 막기 위한 디바운스 적용
             let searchTimeout;
             document.getElementById("search-box").addEventListener("input", () => {
                 clearTimeout(searchTimeout);
@@ -444,6 +607,7 @@
                 const url = new URL(window.location.href);
                 url.hash = `msg-${msgId}`;
                 navigator.clipboard.writeText(url.toString());
+                showToast("링크가 복사되었습니다.");
             }
 
             const config = { chap: 'all', langs: [] };
@@ -493,33 +657,28 @@
                     catch(e) { regex = null; }
                 }
 
-                // 새롭게 렌더링된 컨테이너 가져오기
                 const container = document.getElementById("render-content");
                 if (!container) return;
 
                 let currentH1 = null;
                 let currentH2 = null;
-                
-                // H1과 H2가 하위에 검색 결과를 1개라도 가지는지 추적하기 위한 Map
                 const visibility = new Map();
 
                 const elements = container.children;
                 
-                // 1. 요소들을 순회하며 검색어 매칭 및 부모(H1, H2) 표시 여부 결정
                 for (let i = 0; i < elements.length; i++) {
                     const el = elements[i];
                     
                     if (el.tagName === 'H1') {
                         currentH1 = el;
-                        visibility.set(currentH1, false); // 일단 안 보이는 상태로 설정
+                        visibility.set(currentH1, false);
                     } else if (el.tagName === 'H2') {
                         currentH2 = el;
-                        visibility.set(currentH2, false); // 일단 안 보이는 상태로 설정
+                        visibility.set(currentH2, false);
                     } else if (el.classList.contains('msg-group')) {
                         let isMatch = true;
                         const plainText = el.getAttribute('data-text');
 
-                        // 검색어가 있을 경우 매칭 검사
                         if (searchTerm) {
                             if (regex) isMatch = regex.test(plainText);
                             else isMatch = plainText.includes(searchTerm);
@@ -527,7 +686,6 @@
 
                         el.style.display = isMatch ? "" : "none";
 
-                        // 매칭된 메시지가 하나라도 있으면, 속해있는 H1과 H2를 화면에 보여주도록 마킹
                         if (isMatch) {
                             if (currentH1) visibility.set(currentH1, true);
                             if (currentH2) visibility.set(currentH2, true);
@@ -535,12 +693,11 @@
                     }
                 }
 
-                // 2. 결정된 가시성 상태를 실제 H1, H2 요소에 적용
                 for (let i = 0; i < elements.length; i++) {
                     const el = elements[i];
                     if (el.tagName === 'H1' || el.tagName === 'H2') {
                         if (!searchTerm) {
-                            el.style.display = ""; // 검색어가 비어있으면 무조건 전부 표시
+                            el.style.display = ""; 
                         } else {
                             el.style.display = visibility.get(el) ? "" : "none";
                         }
@@ -548,10 +705,12 @@
                 }
             }
 
+            // 아이콘 SVG 문자열 선언
             const linkIcon = `<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+            const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
 
             let curRendered = null;
-            let renderStateId = 0; // 로딩 도중 다른 옵션을 클릭했을 때 이전 렌더링을 취소하기 위한 ID
+            let renderStateId = 0; 
 
             function render() {
                 if (!text) return;
@@ -565,7 +724,6 @@
                 renderStateId++;
                 const currentRenderId = renderStateId;
 
-                // 로딩 바 UI 생성
                 textboxesContainer.innerHTML = `
                     <div id="loading-container" style="padding: 40px 20px; max-width: 600px; margin: 0 auto; text-align: center;">
                         <h2 style="margin-bottom: 15px; font-family: sans-serif;">Loading Text Data...</h2>
@@ -582,7 +740,6 @@
                 const loadingText = document.getElementById("loading-text");
                 const loadingContainer = document.getElementById("loading-container");
 
-                // 렌더링 해야 할 데이터를 1차원 배열(Tasks)로 평탄화
                 const tasks = [];
                 for (let chap = 1; chap <= 4; chap++) {
                     if (config.chap !== String(chap) && config.chap !== "all") continue;
@@ -598,11 +755,9 @@
 
                 const totalTasks = tasks.length;
                 let currentIdx = 0;
-                const chunkSize = 20; // 한 프레임에 처리할 그룹 수 (렉이 걸리면 줄이고, 로딩이 느리면 늘리세요)
+                const chunkSize = 20; 
 
-                // 비동기 청크 렌더링 함수
                 function processNextChunk() {
-                    // 다른 렌더링이 시작되었으면 현재 루프 종료
                     if (currentRenderId !== renderStateId) return;
 
                     let htmlBuffer = "";
@@ -643,9 +798,13 @@
                                         titleAdded = true;
                                     }
 
+                                    // 툴팁 안내가 들어간 복사 버튼 렌더링
                                     htmlBuffer += `
                                         <div class="msg-group" id="msg-${msgId}" data-text="${combinedTextForSearch.replace(/"/g, '&quot;')}">
-                                            <button class="copy-link-btn" onclick="copyDeepLink('${msgId}')" title="Copy Link">${linkIcon}</button>
+                                            <div class="msg-actions">
+                                                <button onclick="copyDeepLink('${msgId}')" data-tooltip="링크 복사">${linkIcon}</button>
+                                                <button onclick="copyBlockText(event, '${msgId}')" data-tooltip="텍스트 복사 (Shift + 클릭하여 여러 줄 복사)">${copyIcon}</button>
+                                            </div>
                                             ${groupContent}
                                         </div>
                                     `;
@@ -654,7 +813,6 @@
                         }
                     }
 
-                    // 생성된 HTML을 실제 DOM에 이어붙임
                     if (htmlBuffer) {
                         const tempDiv = document.createElement("div");
                         tempDiv.innerHTML = htmlBuffer;
@@ -663,19 +821,17 @@
                         }
                     }
 
-                    // 로딩 바 진행도 업데이트
                     const progress = Math.floor((currentIdx / totalTasks) * 100);
                     loadingBar.style.width = progress + "%";
                     loadingText.innerText = progress + "%";
 
-                    // 다음 청크 진행
                     if (currentIdx < totalTasks) {
-                        requestAnimationFrame(processNextChunk); // 브라우저가 숨쉴(렌더링할) 틈을 줌
+                        requestAnimationFrame(processNextChunk); 
                     } else {
-                        // 렌더링 완료 처리
                         loadingContainer.style.display = "none";
                         curRendered = thisRender;
                         applyFilters();
+                        buildToC(); // 목차 생성
                         
                         setTimeout(() => {
                             if(window.location.hash) {
@@ -686,7 +842,6 @@
                     }
                 }
 
-                // 청크 작업 시작
                 requestAnimationFrame(processNextChunk);
             }
 
@@ -697,6 +852,158 @@
                 loadConfigFromURL();
                 render();
             });
+
+            /* =======================================
+                추가 기능: 토스트 알림, 목차, 텍스트 복사
+            ======================================= */
+
+            let toastTimeout;
+            function showToast(message) {
+                const toast = document.getElementById("toast");
+                toast.innerText = message;
+                toast.style.opacity = "1";
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => { toast.style.opacity = "0"; }, 2500);
+            }
+
+            // 목차(ToC) 사이드바 열기/닫기
+            const tocSidebar = document.getElementById("toc-sidebar");
+            const tocOverlay = document.getElementById("toc-overlay");
+
+            document.getElementById("toc-toggle-btn").addEventListener("click", () => {
+                tocSidebar.classList.add("open");
+                tocOverlay.classList.add("open");
+            });
+
+            tocOverlay.addEventListener("click", () => {
+                tocSidebar.classList.remove("open");
+                tocOverlay.classList.remove("open");
+            });
+
+            // 목차 검색 기능
+            document.getElementById("toc-search").addEventListener("input", (e) => {
+                const term = e.target.value.toLowerCase();
+                const tocList = document.getElementById("toc-list");
+                
+                Array.from(tocList.children).forEach(h1Li => {
+                    const h1A = h1Li.querySelector("a");
+                    const ul = h1Li.querySelector("ul");
+                    let h1Match = h1A.innerText.toLowerCase().includes(term);
+                    let anyH2Match = false;
+
+                    if (ul) {
+                        Array.from(ul.children).forEach(h2Li => {
+                            const h2A = h2Li.querySelector("a");
+                            if (h1Match || h2A.innerText.toLowerCase().includes(term)) {
+                                h2Li.style.display = "";
+                                anyH2Match = true;
+                            } else {
+                                h2Li.style.display = "none";
+                            }
+                        });
+                    }
+
+                    if (h1Match || anyH2Match) {
+                        h1Li.style.display = "";
+                    } else {
+                        h1Li.style.display = "none";
+                    }
+                });
+            });
+
+            function buildToC() {
+                const container = document.getElementById("render-content");
+                const tocList = document.getElementById("toc-list");
+                let html = "";
+                let inChap = false;
+
+                for (let i = 0; i < container.children.length; i++) {
+                    const el = container.children[i];
+                    if (el.tagName === 'H1') {
+                        if (inChap) html += `</ul></li>`;
+                        html += `<li><a href="#${el.id}" style="font-weight:bold;">${el.innerText}</a><ul>`;
+                        inChap = true;
+                    } else if (el.tagName === 'H2') {
+                        html += `<li><a href="#${el.id}">${el.innerText}</a></li>`;
+                    }
+                }
+                if (inChap) html += `</ul></li>`;
+                tocList.innerHTML = html;
+
+                tocList.querySelectorAll("a").forEach(a => {
+                    a.addEventListener("click", () => {
+                        tocSidebar.classList.remove("open");
+                        tocOverlay.classList.remove("open");
+                    });
+                });
+            }
+
+            // 텍스트 복사 & 범위 복사 로직 (Shift + Click)
+            let firstSelectedBlock = null;
+
+            function copyBlockText(event, msgId) {
+                const currentBlock = document.getElementById(`msg-${msgId}`);
+
+                if (event.shiftKey) {
+                    if (!firstSelectedBlock) {
+                        firstSelectedBlock = currentBlock;
+                        currentBlock.classList.add("selected-for-copy");
+                        showToast("범위 복사 시작! 마지막 블록을 Shift+클릭 하세요.");
+                        return;
+                    } else {
+                        copyRange(firstSelectedBlock, currentBlock);
+                        firstSelectedBlock.classList.remove("selected-for-copy");
+                        firstSelectedBlock = null;
+                        return;
+                    }
+                }
+
+                if (firstSelectedBlock) {
+                    firstSelectedBlock.classList.remove("selected-for-copy");
+                    firstSelectedBlock = null;
+                }
+                
+                navigator.clipboard.writeText(extractText(currentBlock));
+                showToast("번역 텍스트가 복사되었습니다.");
+            }
+
+            function extractText(block) {
+                let res = [];
+                block.querySelectorAll('.textbox').forEach(box => {
+                    const lang = box.getAttribute('lang').toUpperCase();
+                    // 브라우저 렌더링 최적화(content-visibility) 때문에 안 보이는 요소의 innerText가 
+                    // 비어버리는 버그 해결을 위해 textContent 사용
+                    const text = box.textContent; 
+                    res.push(`[${lang}] ${text}`);
+                });
+                return res.join('\n');
+            }
+
+            function copyRange(startBlock, endBlock) {
+                const allBlocks = Array.from(document.querySelectorAll('.msg-group'));
+                const idx1 = allBlocks.indexOf(startBlock);
+                const idx2 = allBlocks.indexOf(endBlock);
+                
+                if (idx1 === -1 || idx2 === -1) return;
+
+                const startIdx = Math.min(idx1, idx2);
+                const endIdx = Math.max(idx1, idx2);
+
+                let res = [];
+                let count = 0;
+
+                for (let i = startIdx; i <= endIdx; i++) {
+                    const block = allBlocks[i];
+                    if (block.style.display !== "none") {
+                        res.push(extractText(block));
+                        res.push("-----------------------");
+                        count++;
+                    }
+                }
+
+                navigator.clipboard.writeText(res.join('\n'));
+                showToast(`${count}개 블록이 일괄 복사되었습니다.`);
+            }
         </script>
     </body>
 </html>
