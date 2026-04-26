@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deltarune Quiz Survival</title>
+    <!-- 기존 프로젝트의 데이터 로드 -->
+    <script src="rendered.json.js"></script>
+    
+    <style>
+        /* 폰트 전역 적용 */
+        @font-face {
+            font-family: 'Deltarune Font';
+            src: url('./gulim-13px.ttf') format('truetype');
+            font-weight: normal;
+            font-display: swap;
+        }
+
+        * {
+            font-family: "Deltarune Font", sans-serif !important;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --panel-bg: #1e1e1e;
+            --btn-bg: #2d2d2d;
+            --btn-hover: #3d3d3d;
+            --border-color: #404040;
+            --accent-color: #5a9fd4;
+            --correct-color: #4CAF50;
+            --wrong-color: #F44336;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #app-container {
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            text-align: center;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 { color: var(--accent-color); font-size: 2.2em; margin-top: 0; margin-bottom: 10px; }
+        h2 { font-size: 1.4em; margin-bottom: 20px; line-height: 1.5; word-break: keep-all; }
+
+        .screen { display: none; flex: 1; overflow-y: auto; overflow-x: hidden; }
+        .screen.active { display: block; }
+
+        select, button {
+            background: var(--btn-bg);
+            color: var(--text-color);
+            border: 2px solid var(--border-color);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select { margin-bottom: 15px; width: 100%; max-width: 400px; }
+        
+        button:hover:not(:disabled) {
+            background: var(--btn-hover);
+            border-color: var(--accent-color);
+        }
+
+        /* 퀴즈 선택지 버튼 스타일 */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .option-btn {
+            text-align: left;
+            padding: 15px;
+            font-size: 1.1em;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: keep-all;
+        }
+
+        .option-btn.correct {
+            background: rgba(76, 175, 80, 0.2) !important;
+            border-color: var(--correct-color) !important;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .option-btn.wrong {
+            background: rgba(244, 67, 54, 0.2) !important;
+            border-color: var(--wrong-color) !important;
+            opacity: 0.6;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #ccc;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .hearts { letter-spacing: 5px; }
+
+        .feedback {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 20px;
+            min-height: 50px;
+            line-height: 1.4;
+        }
+
+        .link-home {
+            display: inline-block;
+            margin-top: 25px;
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 1em;
+            opacity: 0.7;
+        }
+        .link-home:hover { opacity: 1; text-decoration: underline; }
+
+        .desc { font-size: 1.1em; color: #aaa; margin-bottom: 30px; line-height: 1.6; }
+        
+        .quote-box {
+            background: #111;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            font-size: 1.2em;
+            color: #fff;
+            margin-bottom: 15px;
+            text-align: left;
+            border-radius: 4px;
+        }
+
+        /* 기록창 (History) 스타일 */
+        #history-container {
+            display: none;
+            text-align: left;
+            background: #111;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 1em;
+        }
+
+        .history-item {
+            border-bottom: 1px dashed #333;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .history-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .history-meta { color: #888; font-size: 0.9em; margin-bottom: 5px; }
+        .history-q { color: #ddd; margin-bottom: 5px; }
+        .history-ans { font-size: 0.95em; line-height: 1.4; }
+        
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #666; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <!-- 시작 화면 -->
+    <div id="screen-start" class="screen active">
+        <h1>DELTARUNE 퀴즈 모음</h1>
+        <p class="desc">
+            라이프 3개가 모두 소진될 때까지 생존하세요!<br>
+            언어와 퀴즈 모드를 선택하고 게임을 시작합니다.
+        </p>
+        
+        <select id="mode-select">
+            <option value="spy">모드 1: 다른 챕터 대사 찾기 (스파이 찾기)</option>
+            <option value="category">모드 2: 같은 카테고리의 대사 맞추기</option>
+        </select>
+        <br>
+        <select id="lang-select">
+            <option value="ko">한국어 (Korean)</option>
+            <option value="en">English</option>
+            <option value="ja">日本語 (Japanese)</option>
+            <option value="es">Español (Spanish)</option>
+            <option value="zh">中文 (Chinese)</option>
+            <option value="ru">Русский (Russian)</option>
+            <option value="pt-BR">Português (Portuguese)</option>
+            <option value="de">Deutsch (German)</option>
+            <option value="pl">Polski (Polish)</option>
+        </select>
+        <br>
+        <button id="btn-start" style="font-size: 1.3em; background: var(--accent-color); color: #fff; border:none; margin-top:10px;">
+            서바이벌 시작
+        </button>
+        <br>
+        <a href="index.html" class="link-home">← 텍스트 덤프로 돌아가기</a>
+    </div>
+
+    <!-- 퀴즈 화면 -->
+    <div id="screen-quiz" class="screen">
+        <div class="status-bar">
+            <span class="hearts" id="quiz-lives">❤️❤️❤️</span>
+            <span id="quiz-score">점수: 0</span>
+        </div>
+        
+        <h2 id="question-title"></h2>
+        <div id="question-extra"></div>
+        
+        <div class="options-grid" id="options-container"></div>
+
+        <div id="feedback-text" class="feedback"></div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="screen-result" class="screen">
+        <h1 style="color: var(--wrong-color);">GAME OVER</h1>
+        <h2 style="font-size: 2.5em; margin: 10px 0; color: #fff;" id="final-score">최종 점수: 0</h2>
+        <p id="result-message" class="desc" style="margin-bottom: 20px;"></p>
+        
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button onclick="location.reload()" style="background: var(--accent-color); color: white; border: none;">
+                다시 플레이
+            </button>
+            <button onclick="toggleHistory()" style="background: #444; border: none;">
+                상세 결과 보기
+            </button>
+            <button onclick="copyHistory()" style="background: #444; border: none;" id="btn-copy">
+                결과 텍스트 복사
+            </button>
+        </div>
+
+        <div id="history-container"></div>
+
+        <br>
+        <a href="index.html" class="link-home">← 텍스트 덤프로 돌아가기</a>
+    </div>
+</div>
+
+<script>
+    // 상태 변수
+    let currentMode = 'spy';
+    let currentLang = 'ko';
+    let score = 0;
+    let lives = 3;
+    let questionCount = 0;
+    
+    // 데이터 저장용
+    let quotesByChapter = {};
+    let quotesByCategory = {}; 
+    let availableChapters =[];
+    let validCategories =[];  
+    let allQuotesFlat =[];    
+
+    // 세부 기록 저장용 배열
+    let answerHistory =[];
+    let currentQMeta = {}; // 현재 문제의 정답, 카테고리 등 임시 저장
+
+    // DOM 요소
+    const screenStart = document.getElementById('screen-start');
+    const screenQuiz = document.getElementById('screen-quiz');
+    const screenResult = document.getElementById('screen-result');
+    const optionsContainer = document.getElementById('options-container');
+    const questionTitle = document.getElementById('question-title');
+    const questionExtra = document.getElementById('question-extra');
+    const feedbackText = document.getElementById('feedback-text');
+    const livesText = document.getElementById('quiz-lives');
+    const scoreText = document.getElementById('quiz-score');
+    const historyContainer = document.getElementById('history-container');
+
+    // 게임 시작
+    document.getElementById('btn-start').addEventListener('click', () => {
+        if (!window.rendered) {
+            alert("데이터를 불러오지 못했습니다! rendered.json.js 파일이 올바른지 확인해주세요.");
+            return;
+        }
+        currentMode = document.getElementById('mode-select').value;
+        currentLang = document.getElementById('lang-select').value;
+        document.getElementById('btn-start').innerText = "데이터 분석 중...";
+        
+        setTimeout(() => {
+            prepareData(currentLang);
+            if (currentMode === 'spy' && availableChapters.length < 2) {
+                alert("스파이 모드를 즐기기엔 챕터 수가 부족합니다.");
+                document.getElementById('btn-start').innerText = "서바이벌 시작";
+                return;
+            }
+            if (currentMode === 'category' && validCategories.length < 5) {
+                alert("카테고리 맞추기 모드를 즐기기엔 데이터가 부족합니다.");
+                document.getElementById('btn-start').innerText = "서바이벌 시작";
+                return;
+            }
+            startGame();
+        }, 100);
+    });
+
+    function cleanStr(txt) {
+        if (!txt) return "";
+        let c = txt.replace(/<[^>]*>?/gm, '').trim();
+        if (c.startsWith('* ')) c = c.substring(2).trim();
+        return c;
+    }
+
+    function prepareData(lang) {
+        quotesByChapter = {};
+        quotesByCategory = {};
+        validCategories =[];
+        allQuotesFlat =[];
+        const rawData = window.rendered;
+
+        for (let chap in rawData) {
+            let chapQuotes =[];
+            for (let group in rawData[chap]) {
+                let groupQuotes =[];
+                const msgs = rawData[chap][group];
+                
+                for (let msgId in msgs) {
+                    let txt = cleanStr(msgs[msgId][lang]);
+                    if (txt.length >= 5 && txt.length <= 100 && !txt.includes("obj_")) {
+                        chapQuotes.push(txt);
+                        groupQuotes.push(txt);
+                        allQuotesFlat.push({ text: txt, category: group });
+                    }
+                }
+                if (groupQuotes.length >= 2) {
+                    quotesByCategory[group] = groupQuotes;
+                    validCategories.push(group);
+                }
+            }
+            if (chapQuotes.length >= 10) {
+                quotesByChapter[chap] = chapQuotes;
+            }
+        }
+        availableChapters = Object.keys(quotesByChapter);
+    }
+
+    function startGame() {
+        score = 0;
+        lives = 3;
+        questionCount = 0;
+        answerHistory =[];
+        switchScreen(screenQuiz);
+        updateLives();
+        loadNextQuestion();
+    }
+
+    function updateLives() {
+        let hearts = "";
+        for (let i = 0; i < 3; i++) {
+            hearts += (i < lives) ? "❤️" : "🖤";
+        }
+        livesText.innerText = hearts;
+        scoreText.innerText = `점수: ${score}`;
+    }
+
+    function loadNextQuestion() {
+        questionCount++;
+        feedbackText.innerText = "";
+        optionsContainer.innerHTML = "";
+        questionExtra.innerHTML = "";
+        let options =[];
+
+        if (currentMode === 'spy') {
+            let shuffledChaps = [...availableChapters].sort(() => 0.5 - Math.random());
+            let baseChap = shuffledChaps[0];
+            let spyChap = shuffledChaps[1];
+
+            let baseQuotes = getRandomElements(quotesByChapter[baseChap], 3);
+            let spyQuote = getRandomElements(quotesByChapter[spyChap], 1)[0];
+
+            options =[
+                { text: baseQuotes[0], isCorrect: false },
+                { text: baseQuotes[1], isCorrect: false },
+                { text: baseQuotes[2], isCorrect: false },
+                { text: spyQuote, isCorrect: true }
+            ];
+            
+            questionTitle.innerHTML = `이 중에 <span style="color:var(--accent-color)">[ 챕터 ${spyChap} ]</span> 대사는 무엇일까요?`;
+            
+            currentQMeta = {
+                correctText: spyQuote,
+                categoryName: `챕터 ${spyChap} 대사`,
+                baseQuote: ""
+            };
+        
+        } else if (currentMode === 'category') {
+            let targetCategory = validCategories[Math.floor(Math.random() * validCategories.length)];
+            let groupQs = getRandomElements(quotesByCategory[targetCategory], 2);
+            let qBase = groupQs[0];
+            let qCorrect = groupQs[1];
+
+            let wrongOptions =[];
+            let maxAttempts = 100;
+            while (wrongOptions.length < 3 && maxAttempts > 0) {
+                let randomQuoteObj = allQuotesFlat[Math.floor(Math.random() * allQuotesFlat.length)];
+                if (randomQuoteObj.category !== targetCategory && !wrongOptions.includes(randomQuoteObj.text)) {
+                    wrongOptions.push(randomQuoteObj.text);
+                }
+                maxAttempts--;
+            }
+
+            options =[
+                { text: qCorrect, isCorrect: true },
+                { text: wrongOptions[0], isCorrect: false },
+                { text: wrongOptions[1], isCorrect: false },
+                { text: wrongOptions[2], isCorrect: false }
+            ];
+
+            questionTitle.innerHTML = `다음 대사와 <span style="color:var(--accent-color)">같은 상황(카테고리)</span>에서 등장한 대사를 고르세요!`;
+            questionExtra.innerHTML = `<div class="quote-box">"${qBase}"</div>`;
+
+            // 카테고리명 예쁘게 정리 (obj_spamton_neo -> obj spamton neo)
+            let prettyCategory = targetCategory.replace(/_slash_/g, "/").replace(/_/g, " ");
+            
+            currentQMeta = {
+                correctText: qCorrect,
+                categoryName: prettyCategory,
+                baseQuote: qBase
+            };
+        }
+
+        options.sort(() => 0.5 - Math.random());
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt.text;
+            btn.onclick = () => handleAnswer(btn, opt.isCorrect, opt.text);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(clickedBtn, isCorrect, clickedText) {
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.disabled = true);
+
+        // 카테고리 정보 문구 (피드백 하단에 작게 표시)
+        let categoryHtml = `<div style="font-size:0.75em; color:#aaa; margin-top:5px; font-weight:normal;">[ 출처: ${currentQMeta.categoryName} ]</div>`;
+
+        if (isCorrect) {
+            clickedBtn.classList.add('correct');
+            feedbackText.innerHTML = `<span style="color:var(--correct-color)">정답입니다!</span>` + categoryHtml;
+            score++;
+        } else {
+            clickedBtn.classList.add('wrong');
+            lives--;
+            feedbackText.innerHTML = `<span style="color:var(--wrong-color)">오답!</span>` + categoryHtml;
+            
+            // 틀렸을 경우 무엇이 정답이었는지 확실하게 초록색으로 표시
+            allBtns.forEach(b => {
+                if (b.innerText === currentQMeta.correctText) {
+                    b.classList.add('correct');
+                } else if (b !== clickedBtn) {
+                    b.style.opacity = "0.4";
+                }
+            });
+        }
+        
+        // 기록 저장 (나중에 결과창에서 보기 위함)
+        answerHistory.push({
+            qNum: questionCount,
+            isCorrect: isCorrect,
+            category: currentQMeta.categoryName,
+            baseQuote: currentQMeta.baseQuote,
+            userText: clickedText,
+            correctText: currentQMeta.correctText
+        });
+        
+        updateLives();
+
+        // 정답/카테고리를 읽을 수 있게 딜레이를 넉넉히(2.5초) 부여
+        setTimeout(() => {
+            if (lives <= 0) {
+                showResult();
+            } else {
+                loadNextQuestion();
+            }
+        }, 2500);
+    }
+
+    function showResult() {
+        switchScreen(screenResult);
+        document.getElementById('final-score').innerText = `최종 점수: ${score}`;
+        
+        let msg = "";
+        if (score >= 30) msg = "당신은 델타룬 텍스트의 신입니다!";
+        else if (score >= 15) msg = "놀라운 기억력! 게임 내 상황을 완벽히 이해하고 있군요.";
+        else if (score >= 5) msg = "나쁘지 않은 실력입니다. 조금 더 연습해보세요!";
+        else msg = "운이 나빴나요? 다시 한번 도전해보세요!";
+        document.getElementById('result-message').innerText = msg;
+
+        buildHistoryUI();
+    }
+
+    // 결과창에 세부 내역 렌더링
+    function buildHistoryUI() {
+        historyContainer.innerHTML = "";
+        answerHistory.forEach(item => {
+            const div = document.createElement('div');
+            div.className = "history-item";
+            
+            let ox = item.isCorrect ? `<span style="color:var(--correct-color)">⭕ 맞음</span>` : `<span style="color:var(--wrong-color)">❌ 틀림</span>`;
+            
+            let html = `
+                <div class="history-meta">[Q${item.qNum}] ${item.category} / ${ox}</div>
+            `;
+            
+            if (item.baseQuote) {
+                html += `<div class="history-q">제시어: "${item.baseQuote}"</div>`;
+            }
+
+            if (!item.isCorrect) {
+                html += `
+                    <div class="history-ans" style="color:var(--wrong-color); text-decoration:line-through;">내 선택: ${item.userText}</div>
+                    <div class="history-ans" style="color:var(--correct-color);">정답: ${item.correctText}</div>
+                `;
+            } else {
+                html += `<div class="history-ans" style="color:var(--correct-color);">정답: ${item.correctText}</div>`;
+            }
+
+            div.innerHTML = html;
+            historyContainer.appendChild(div);
+        });
+    }
+
+    function toggleHistory() {
+        if (historyContainer.style.display === "none" || historyContainer.style.display === "") {
+            historyContainer.style.display = "block";
+            // 자동 스크롤
+            setTimeout(() => {
+                historyContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+        } else {
+            historyContainer.style.display = "none";
+        }
+    }
+
+    function copyHistory() {
+        let textResult = `[ Deltarune Quiz Survival ]\n`;
+        let modeStr = currentMode === 'spy' ? '스파이 찾기' : '카테고리 맞추기';
+        textResult += `모드: ${modeStr} / 언어: ${currentLang.toUpperCase()}\n`;
+        textResult += `최종 점수: ${score}점\n\n`;
+
+        answerHistory.forEach(item => {
+            textResult += `Q${item.qNum}.[${item.category}]\n`;
+            if (item.baseQuote) textResult += `제시: "${item.baseQuote}"\n`;
+            if (item.isCorrect) {
+                textResult += `⭕ 정답: ${item.correctText}\n`;
+            } else {
+                textResult += `❌ 나의 선택: ${item.userText}\n`;
+                textResult += `✔️ 실제 정답: ${item.correctText}\n`;
+            }
+            textResult += `-----------------------\n`;
+        });
+
+        navigator.clipboard.writeText(textResult).then(() => {
+            let btn = document.getElementById("btn-copy");
+            btn.innerText = "복사 완료!";
+            btn.style.background = "var(--correct-color)";
+            setTimeout(() => {
+                btn.innerText = "결과 텍스트 복사";
+                btn.style.background = "#444";
+            }, 2000);
+        }).catch(() => {
+            alert("복사에 실패했습니다.");
+        });
+    }
+
+    function switchScreen(targetScreen) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        targetScreen.classList.add('active');
+    }
+
+    function getRandomElements(arr, n) {
+        let result = new Array(n), len = arr.length, taken = new Array(len);
+        if (n > len) return[];
+        while (n--) {
+            let x = Math.floor(Math.random() * len);
+            result[n] = arr[x in taken ? taken[x] : x];
+            taken[x] = --len in taken ? taken[len] : len;
+        }
+        return result;
+    }
+</script>
+
+</body>
+</html>
