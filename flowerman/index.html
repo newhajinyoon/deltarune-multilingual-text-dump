@@ -58,8 +58,62 @@
         .sync-control { display: flex; align-items: center; gap: 5px; font-size: 14px; background: #111; padding: 5px 10px; border-radius: 4px; border: 1px solid #444; }
         .sync-control input { width: 50px; background: transparent; color: white; border: none; font-size: 14px; text-align: center; }
 
-        .lang-toggles { display: flex; gap: 15px; font-size: 16px; flex-wrap: wrap; }
+        .lang-toggles { display: flex; gap: 15px; font-size: 16px; flex-wrap: wrap; align-items: center; }
         .lang-toggles label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+        .lang-group {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .sub-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+            background: #111;
+            border: 1px solid #444;
+            padding: 5px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 200;
+            font-size: 14px;
+        }
+
+        .lang-group:hover .sub-options {
+            display: block;
+        }
+
+        .sub-options-title {
+            font-size: 11px;
+            color: #aaa;
+            font-weight: bold;
+            margin: 2px 0 5px 0;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        ruby {
+            ruby-position: over;
+        }
+        rt {
+            font-size: 0.45em;
+            line-height: 1;
+        }
+        .base rt {
+            text-shadow: 
+                -1px -1px 0 #000, 0 -1px 0 #000, 1px -1px 0 #000,
+                -1px  0   0 #000,                1px  0   0 #000,
+                -1px  1px 0 #000, 0  1px 0 #000, 1px  1px 0 #000;
+        }
+        .fill rt {
+            text-shadow: 
+                -1px -1px 0 #fff, 0 -1px 0 #fff, 1px -1px 0 #fff,
+                -1px  0   0 #fff,                1px  0   0 #fff,
+                -1px  1px 0 #fff, 0  1px 0 #fff, 1px  1px 0 #fff;
+        }
 
         #master {
             flex: 1;
@@ -159,8 +213,28 @@
         <div class="lang-toggles">
             <label><input type="checkbox" id="chk-ko" checked> KO</label>
             <label><input type="checkbox" id="chk-en" checked> EN</label>
-            <label><input type="checkbox" id="chk-ja" checked> JA</label>
-            <label><input type="checkbox" id="chk-zh" checked> ZH</label>
+            
+            <div class="lang-group">
+                <label><input type="checkbox" id="chk-ja" checked> JA</label>
+                <div class="sub-options">
+                    <label><input type="checkbox" id="chk-ruby" checked> Furigana</label>
+                </div>
+            </div>
+
+            <div class="lang-group">
+                <label><input type="checkbox" id="chk-zh" checked> ZH</label>
+                <div class="sub-options">
+                    <div class="sub-options-title">Script</div>
+                    <label><input type="radio" name="zh-script" value="simp" checked> 简体</label>
+                    <label><input type="radio" name="zh-script" value="trad"> 繁體</label>
+                    <div style="height: 1px; background: #444; margin: 8px 0;"></div>
+                    <div class="sub-options-title">Phonetics</div>
+                    <label><input type="radio" name="zh-ruby" value="none" checked> None</label>
+                    <label><input type="radio" name="zh-ruby" value="pinyin"> Pinyin</label>
+                    <label><input type="radio" name="zh-ruby" value="bopo"> Bopomofo</label>
+                </div>
+            </div>
+
             <label><input type="checkbox" id="chk-es" checked> ES</label>
             <label><input type="checkbox" id="chk-ru" checked> RU</label>
         </div>
@@ -187,43 +261,43 @@ const beattime = [48.19, 48.56, 48.94, 49.31, 49.67, 50.04, 50.42, 50.79, 51.17,
 
 const lyricsData = [
     { time: 0, en: "", ko: "", ja: "", zh: "", es: "", ru: "" },
-    { time: 24 - 0.02, en: "Ten feet twen-ty the Flow-er Man", ko: "3.5미터 <플라>워 맨", ja: "<10>尺20の <フラ><ワー><マン>", zh: "三 米 五 六 的 小 花 侠", es: "Son tres me-tros de Hom-bre Flor", ru: "Рас-цве-тай, о, ге-рой цве-тов," },
-    { time: 27.38 - 0.02, en: "Is wai-ting for the touch of his hand", ko: "꽃잎을 펴주는 손길을", ja: "その手で触れてよ", zh: "期 盼 那 双 手 呵 护 有 加", es: "Su ma-no aguar-da por su ca-lor", ru: "Ру-ки при-кос-но-вения не жди," },
-    { time: 30.75 - 0.02, en: "Straight-en-ing pe-tals out with-out a plan", ko: "자신도 돌볼 수 없으면서", ja: "この花+びら 全+部+", zh: "整 理 着 花 瓣 却 有 向 无 方", es: "A-li-sa pé-ta-los sin ra-zón", ru: "По-мыс-ла нет, но ле-пест-ки тя-ни," },
-    { time: 33.75 - 0.02, en: "Like the eve-ry dai-ly", ko: "매일 기다리네", ja: "整++えてよ", zh: "只 顾 那 个 每 天", es: "Co-mo tra-di-ción", ru: "Пусть ми-ну-ли го-ды" },
-    { time: 36 - 0.02, en: "Wish that both-ers the Flow-er Man", ko: "소원을 품은 <플라>워 맨", ja: "<Woo> <Woo> 愁いの<フラ><ワー><マン>", zh: "萦 绕 在 心 头 的 愿 望", es: "Un de-seo acecha al Hom-bre Flor", ru: "Не тре-вожь-ся, ге-рой цве-тов," },
-    { time: 39.38 - 0.02, en: "Could I do some-thing to make him laugh", ko: "당신을 웃게 할 방법을", ja: "ガラスの器+++の", zh: "如 何 能 让 他 笑 得 欢 畅", es: "Qu-izá su ri-sa pue-da encont-rar", ru: "По-бе-ги сме-хом сво-им ороши," },
-    { time: 42.75 - 0.02, en: "In-side my lit-tle cham-ber made of glass", ko: "그 작은 유리병 속에서", ja: "中+で願+うの++は", zh: "生 活 在 我 的 小 小 玻 璃 缸", es: "Tras esta cá-mara he-cha de cris-tal", ru: "Из-—под стек-ла тщет-ны на-ши моль-бы." },
-    { time: 45.75 - 0.02, en: "So he lived the", ko: "고민하던", ja: "あの<笑顔>", zh: "苦 恼 着 的", es: "Así vive el", ru: "Но ско-ре-е" },
-    { time: 47.25 - 0.02, en: "Flow-er Man, Flow-er Man", ko: "<플라>워 맨 <플라>워 맨", ja: "<フラ><ワー><マン> <フラ><ワー><マン>", zh: "小 花 侠  小 花 侠", es: "Hom-bre Flor, Hom-bre Flor", ru: "Рас-цве-тай, рас-цве-тай," },
-    { time: 50.25 - 0.02, en: "With his heart in the sand", ko: "모래에 묻은 맘", ja: "土+の 奥+へ", zh: "寸 草 心  沙 中 藏", es: "En-te-rró su cora-zón", ru: "В грунте серд-це ос-тавь," },
-    { time: 53.06 - 0.02, en: "So he stands", ko: "일어서", ja: "<根を>張り", zh: "把 头 仰", es: "Al-za-rá", ru: "Гор-до встань" },
-    { time: 55.12 - 0.02, en: "To watch the whole wide world", ko: "이 넓은 세상을", ja: "世界+を見る", zh: "望 见 纷 繁 世 界", es: "Su vista a un mundo que", ru: "И по-смот-ри на мир" },
-    { time: 57.94 - 0.02, en: "From a can", ko: "바라봐", ja: "空+に", zh: "隔 道 墙", es: "lo ignoró", ru: "Без те-бя." },
-    { time: 59.25 - 0.02, en: "Way up high in the sky", ko: "저 하늘 내리쬔", ja: "高+く 注+ぐ", zh: "看 天 空  在 发 亮", es: "En el cie-lo su albor", ru: "Вы-со-та — не беда," },
-    { time: 62.25 - 0.02, en: "With the sun in his eyes", ko: "햇빛을 <눈에> 담고", ja: "光++ 浴びて", zh: "太 阳 光  透 进 房", es: "En sus o-jos el sol", ru: "Солн-це гре-ет гла-за," },
-    { time: 65.06 - 0.02, en: "Ain't it nice", ko: "나날이", ja: "日々は", zh: "多 明 朗", es: "¿No es genial?", ru: "Кра-со-та!" },
-    { time: 67.12 - 0.02, en: "The life for-ev-er for", ko: "계속되어 가는", ja: "続+いてゆく", zh: "花 一 成 不 变 的", es: "La vida de-dicar a las", ru: "Ос-тань-ся жить цвет-ком" },
-    { time: 70.5 - 0.02, en: "Flow-ers", ko: "<플라><워즈>", ja: "<フラ><ワーズ>", zh: "日 常", es: "Flo-res", ru: "Веч-но" },
+    { time: 24 - 0.02, en: "Ten feet twen-ty the Flow-er Man", ko: "3.5미터 <플라>워 맨", ja: "<10>[尺|しゃく]20の <フラ><ワー><マン>", zh: "[三|三|sān|ㄙㄢ] [米|米|mǐ|ㄇㄧˇ] [五|五|wǔ|ㄨˇ] [六|六|liù|ㄌㄧㄡˋ] [的|的|de|ㄉㄜ˙] [小|小|xiǎo|ㄒㄧㄠˇ] [花|花|huā|ㄏㄨㄚ] [侠|俠|xiá|ㄒㄧㄚˊ]", es: "Son tres me-tros de Hom-bre Flor", ru: "Рас-цве-тай, о, ге-рой цве-тов," },
+    { time: 27.38 - 0.02, en: "Is wai-ting for the touch of his hand", ko: "꽃잎을 펴주는 손길을", ja: "その[手|て]で[触|ふ]れてよ", zh: "[期|期|qī|ㄑㄧ] [盼|盼|pàn|ㄆㄢˋ] [那|那|nà|ㄋㄚˋ] [双|雙|shuāng|ㄕㄨㄤ] [手|手|shǒu|ㄕㄡˇ] [呵|呵|hē|ㄏㄜ] [护|護|hù|ㄏㄨˋ] [有|有|yǒu|ㄧㄡˇ] [加|加|jiā|ㄐㄧㄚ]", es: "Su ma-no aguar-da por su ca-lor", ru: "Ру-ки при-кос-но-вения не жди," },
+    { time: 30.75 - 0.02, en: "Straight-en-ing pe-tals out with-out a plan", ko: "자신도 돌볼 수 없으면서", ja: "この[花|はな]+びら [全|ぜん]+[部|ぶ]+", zh: "[整|整|zhěng|ㄓㄥˇ] [理|理|lǐ|ㄌㄧˇ] [着|著|zhe|ㄓㄜ˙] [花|花|huā|ㄏㄨㄚ] [瓣|瓣|bàn|ㄅㄢˋ] [却|卻|què|ㄑㄩㄝˋ] [有|有|yǒu|ㄧㄡˇ] [向|向|xiàng|ㄒㄧㄤˋ] [无|無|wú|ㄨˊ] [方|方|fāng|ㄈㄤ]", es: "A-li-sa pé-ta-los sin ra-zón", ru: "По-мыс-ла нет, но ле-пест-ки тя-ни," },
+    { time: 33.75 - 0.02, en: "Like the eve-ry dai-ly", ko: "매일 기다리네", ja: "[整|ととの]++えてよ", zh: "[只|只|zhǐ|ㄓˇ] [顾|顧|gù|ㄍㄨˋ] [那|那|nà|ㄋㄚˋ] [个|個|gè|ㄍㄜˋ] [每|每|měi|ㄇㄟˇ] [天|天|tiān|ㄊㄧㄢ]", es: "Co-mo tra-di-ción", ru: "Пусть ми-ну-ли го-ды" },
+    { time: 36 - 0.02, en: "Wish that both-ers the Flow-er Man", ko: "소원을 품은 <플라>워 맨", ja: "<Woo> <Woo> [愁|うれ]いの<フラ><ワー><マン>", zh: "[萦|縈|yíng|ㄧㄥˊ] [绕|繞|rào|ㄖㄠˋ] [在|在|zài|ㄗㄞˋ] [心|心|xīn|ㄒㄧㄣ] [头|頭|tóu|ㄊㄡˊ] [的|的|de|ㄉㄜ˙] [愿|願|yuàn|ㄩㄢˋ] [望|望|wàng|ㄨㄤˋ]", es: "Un de-seo acecha al Hom-bre Flor", ru: "Не тре-вожь-ся, ге-рой цве-тов," },
+    { time: 39.38 - 0.02, en: "Could I do some-thing to make him laugh", ko: "당신을 웃게 할 방법을", ja: "ガラスの[器|うつわ]+++の", zh: "[如|如|rú|ㄖㄨˊ] [何|何|hé|ㄏㄜˊ] [能|能|néng|ㄋㄥˊ] [让|讓|ràng|ㄖㄤˋ] [他|他|tā|ㄊㄚ] [笑|笑|xiào|ㄒㄧㄠˋ] [得|得|de|ㄉㄜ˙] [欢|歡|huān|ㄏㄨㄢ] [畅|暢|chàng|ㄔㄤˋ]", es: "Qu-izá su ri-sa pue-da encont-rar", ru: "По-бе-ги сме-хом сво-им ороши," },
+    { time: 42.75 - 0.02, en: "In-side my lit-tle cham-ber made of glass", ko: "그 작은 유리병 속에서", ja: "[中|なか]+で[願|ねが]+うの++は", zh: "[生|生|shēng|ㄕㄥ] [活|活|huó|ㄏㄨㄛˊ] [在|在|zài|ㄗㄞˋ] [我|我|wǒ|ㄨㄛˇ] [的|的|de|ㄉㄜ˙] [小|小|xiǎo|ㄒㄧㄠˇ] [小|小|xiǎo|ㄒㄧㄠˇ] [玻|玻|bō|ㄅㄛ] [璃|璃|lí|ㄌㄧˊ] [缸|缸|gāng|ㄍㄤ]", es: "Tras esta cá-mara he-cha de cris-tal", ru: "Из-—под стек-ла тщет-ны на-ши моль-бы." },
+    { time: 45.75 - 0.02, en: "So he lived the", ko: "고민하던", ja: "あの<[笑|え][顔|がお]>", zh: "[苦|苦|kǔ|ㄎㄨˇ] [恼|惱|nǎo|ㄋㄠˇ] [着|著|zhe|ㄓㄜ˙] [的|的|de|ㄉㄜ˙]", es: "Así vive el", ru: "Но ско-ре-е" },
+    { time: 47.25 - 0.02, en: "Flow-er Man, Flow-er Man", ko: "<플라>워 맨 <플라>워 맨", ja: "<フラ><ワー><マン> <フラ><ワー><マン>", zh: "[小|小|xiǎo|ㄒㄧㄠˇ] [花|花|huā|ㄏㄨㄚ] [侠|俠|xiá|ㄒㄧㄚˊ]  [小|小|xiǎo|ㄒㄧㄠˇ] [花|花|huā|ㄏㄨㄚ] [侠|俠|xiá|ㄒㄧㄚˊ]", es: "Hom-bre Flor, Hom-bre Flor", ru: "Рас-цве-тай, рас-цве-тай," },
+    { time: 50.25 - 0.02, en: "With his heart in the sand", ko: "모래에 묻은 맘", ja: "[土|つち]+の [奥|おく]+へ", zh: "[寸|寸|cùn|ㄘㄨㄣˋ] [草|草|cǎo|ㄘㄠˇ] [心|心|xīn|ㄒㄧㄣ]  [沙|沙|shā|ㄕㄚ] [中|中|zhōng|ㄓㄨㄥ] [藏|藏|cáng|ㄘㄤˊ]", es: "En-te-rró su cora-zón", ru: "В грунте серд-це ос-тавь," },
+    { time: 53.06 - 0.02, en: "So he stands", ko: "일어서", ja: "<[根|ね]を>[張|は]り", zh: "[把|把|bǎ|ㄅㄚˇ] [头|頭|tóu|ㄊㄡˊ] [仰|仰|yǎng|ㄧㄤˇ]", es: "Al-za-rá", ru: "Гор-до встань" },
+    { time: 55.12 - 0.02, en: "To watch the whole wide world", ko: "이 넓은 세상을", ja: "[世|せ][界|かい]+を[見|み]る", zh: "[望|望|wàng|ㄨㄤˋ] [见|見|jiàn|ㄐㄧㄢˋ] [纷|紛|fēn|ㄈㄣ] [繁|繁|fán|ㄈㄢˊ] [世|世|shì|ㄕˋ] [界|界|jiè|ㄐㄧㄝˋ]", es: "Su vista a un mundo que", ru: "И по-смот-ри на мир" },
+    { time: 57.94 - 0.02, en: "From a can", ko: "바라봐", ja: "[空|そら]+に", zh: "[隔|隔|gé|ㄍㄜˊ] [道|道|dào|ㄉㄠˋ] [墙|牆|qiáng|ㄑㄧㄤˊ]", es: "lo ignoró", ru: "Без те-бя." },
+    { time: 59.25 - 0.02, en: "Way up high in the sky", ko: "저 하늘 내리쬔", ja: "[高|たか]+く [注|そそ]ぐ", zh: "[看|看|kàn|ㄎㄢˋ] [天|天|tiān|ㄊㄧㄢ] [空|空|kōng|ㄎㄨㄥ]  [在|在|zài|ㄗㄞˋ] [发|發|fā|ㄈㄚ] [亮|亮|liàng|ㄌㄧㄤˋ]", es: "En el cie-lo su albor", ru: "Вы-со-та — не беда," },
+    { time: 62.25 - 0.02, en: "With the sun in his eyes", ko: "햇빛을 <눈에> 담고", ja: "[光|ひかり]++ [浴|あ]びて", zh: "[太|太|tài|ㄊㄞˋ] [阳|陽|yáng|ㄧㄤˊ] [光|光|guāng|ㄍㄨㄤ]  [透|透|tòu|ㄊㄡˋ] [进|進|jìn|ㄐㄧㄣˋ] [房|房|fáng|ㄈㄤˊ]", es: "En sus o-jos el sol", ru: "Солн-це гре-ет гла-за," },
+    { time: 65.06 - 0.02, en: "Ain't it nice", ko: "나날이", ja: "[日|ひ][々|び]は", zh: "[多|多|duō|ㄉㄨㄛ] [明|明|míng|ㄇㄧㄥˊ] [朗|朗|lǎng|ㄌㄤˇ]", es: "¿No es genial?", ru: "Кра-со-та!" },
+    { time: 67.12 - 0.02, en: "The life for-ev-er for", ko: "계속되어 가는", ja: "[続|つづ]+いてゆく", zh: "[花|花|huā|ㄏㄨㄚ] [一|一|yī|ㄧ] [成|成|chéng|ㄔㄥˊ] [不|不|bù|ㄅㄨˋ] [变|變|biàn|ㄅㄧㄢˋ] [的|的|de|ㄉㄜ˙]", es: "La vida de-dicar a las", ru: "Ос-тань-ся жить цвет-ком" },
+    { time: 70.5 - 0.02, en: "Flow-ers", ko: "<플라><워즈>", ja: "<フラ><ワーズ>", zh: "[日|日|rì|ㄖˋ] [常|常|cháng|ㄔㄤˊ]", es: "Flo-res", ru: "Веч-но" },
     { time: 72 - 0.02, en: "", ko: "", ja: "", zh: "", es: "", ru: "" },
-    { time: 144 - 0.02, en: "Ten feet twen-ty the Flow-er Man", ko: "3.5미터 <플라>워 맨", ja: "<10>尺20の <フラ><ワー><マン>", zh: "三 米 五 六 的 小 花 侠", es: "Son tres me-tros de Hom-bre Flor", ru: "Рас-цве-тай, о, ге-рой цве-тов," },
-    { time: 147.38 - 0.02, en: "Is wait-ing for the touch of his hand", ko: "꽃잎을 펴주는 손길을", ja: "その手で触れてよ", zh: "期 盼 那 双 手 呵 护 有 加", es: "Su ma-no aguar-da por su ca-lor", ru: "Ру-ки при-кос-но-вения не жди," },
-    { time: 150.75 - 0.02, en: "Fall-en to pie-ces still with-out a plan", ko: "좌절 속에 조각났어도", ja: "砕+け散+る器+++", zh: "四 分 五 裂 依 旧 有 向 无 方", es: "He-cho peda-zos y aún sin ra-zón", ru: "Пусть раз-ле-те-лись ле-пест-ки тво-и," },
-    { time: 153.75 - 0.02, en: "Yet the eve-ry dai-ly", ko: "매일 기다리네", ja: "力++に変え", zh: "可 那 岁 岁 年 年", es: "Co-mo tra-di-ción", ru: "Но ми-ну-ли го-ды." },
-    { time: 156 - 0.02, en: "Hope that pow-ered the Flow-er Man", ko: "희<망을> 붙드는 <플라>워 맨", ja: "<Oh> <Oh> 恐れぬ<フラ><ワー><マン>", zh: "给 予 着 力 量 的 希 望", es: "La espe-ran-za del Hom-bre Flor", ru: "Путь тер-нист, о, ге-рой цве-тов," },
-    { time: 159.38 - 0.02, en: "Would nev-er cow-er off of its path", ko: "고난 뿐인 길 이어져도", ja: "おのれの道+へ+と", zh: "定 好 方 向 就 绝 不 退 让", es: "Que en su sen-da se man-ten-drá", ru: "Да-дут пло-ды тво-и труды" },
-    { time: 162.75 - 0.02, en: "Even if bro-ken I am more than glass", ko: "유리 속에 비친 모습보다", ja: "ガラスが砕+けたって", zh: "哪 怕 再 受 伤 也 比 玻 璃 强", es: "Aún en pe-da-zos soy más que cris-tal", ru: "Вос-ста-нем вмес-те мы про-тив судь-бы" },
-    { time: 165.75 - 0.02, en: "So he lived the", ko: "더욱 강한", ja: "生きるよ", zh: "多 执 着 的", es: "Así vive el", ru: "Так ско-ре-е" },
-    { time: 167.25 - 0.02, en: "Flow-er Man, Flow-er Man", ko: "<플라>워 맨 <플라>워 맨", ja: "<フラ><ワー><マン> <フラ><ワー><マン>", zh: "小 花 侠  小 花 侠", es: "Hom-bre Flor, Hom-bre Flor", ru: "Рас-цве-тай, рас-цве-тай" },
-    { time: 170.25 - 0.02, en: "With his heart in the sand", ko: "모래에 묻은 맘", ja: "土+の 奥+へ", zh: "寸 草 心  沙 中 藏", es: "En-te-rró su cora-zón", ru: "В грунте серд-це ос-тавь" },
-    { time: 173.06 - 0.02, en: "So he stands", ko: "일어서", ja: "<根を>張り", zh: "把 头 仰", es: "Al-za-rá", ru: "Гор-до встань" },
-    { time: 175.12 - 0.02, en: "To watch the whole wide world", ko: "이 넓은 세상을", ja: "世界+を見る", zh: "望 见 纷 繁 世 界", es: "Su vista a un mundo que", ru: "И по-смот-ри на мир" },
-    { time: 177.94 - 0.02, en: "From a can", ko: "바라봐", ja: "空+に", zh: "隔 道 墙", es: "lo ignoró", ru: "Без те-бя." },
-    { time: 179.25 - 0.02, en: "Way up high in the sky", ko: "저 하늘 내리쬔", ja: "高+く 注+ぐ", zh: "看 天 空  在 发 亮", es: "En el cie-lo tu albor", ru: "Вы-со-та — не беда," },
-    { time: 182.25 - 0.02, en: "With the sun in your eyes", ko: "햇빛을 <눈에> 담고", ja: "光++ 浴びて", zh: "太 阳 光  透 进 房", es: "En tus o-jos el sol", ru: "Солн-це гре-ет гла-за" },
-    { time: 185.06 - 0.02, en: "Ain't it nice", ko: "나날이", ja: "日々は", zh: "多 明 朗", es: "¿No es genial?", ru: "Кра-со-та!" },
-    { time: 187.12 - 0.02, en: "The life for-ev-er for", ko: "계속되어 가는", ja: "続+いてゆく", zh: "花 一 成 不 变 的", es: "La vida de-dicar a las", ru: "Ос-тань-ся жить цвет-ком" },
-    { time: 190.5 - 0.02, en: "Flow-ers", ko: "<플라><워즈>", ja: "<フラ><ワーズ>", zh: "日 常", es: "Flo-res", ru: "Веч-но" },
+    { time: 144 - 0.02, en: "Ten feet twen-ty the Flow-er Man", ko: "3.5미터 <플라>워 맨", ja: "<10>[尺|しゃく]20の <フラ><ワー><マン>", zh: "[三|三|sān|ㄙㄢ] [米|米|mǐ|ㄇㄧˇ] [五|五|wǔ|ㄨˇ] [六|六|liù|ㄌㄧㄡˋ] [的|的|de|ㄉㄜ˙] [小|小|xiǎo|ㄒㄧㄠˇ] [花|花|huā|ㄏㄨㄚ] [侠|俠|xiá|ㄒㄧㄚˊ]", es: "Son tres me-tros de Hom-bre Flor", ru: "Рас-цве-тай, о, ге-рой цве-тов," },
+    { time: 147.38 - 0.02, en: "Is wait-ing for the touch of his hand", ko: "꽃잎을 펴주는 손길을", ja: "その[手|て]で[触|ふ]れてよ", zh: "[期|期|qī|ㄑㄧ] [盼|盼|pàn|ㄆㄢˋ] [那|那|nà|ㄋㄚˋ] [双|雙|shuāng|ㄕㄨㄤ] [手|手|shǒu|ㄕㄡˇ] [呵|呵|hē|ㄏㄜ] [护|護|hù|ㄏㄨˋ] [有|有|yǒu|ㄧㄡˇ] [加|加|jiā|ㄐㄧㄚ]", es: "Su ma-no aguar-da por su ca-lor", ru: "Ру-ки при-кос-но-вения не жди," },
+    { time: 150.75 - 0.02, en: "Fall-en to pie-ces still with-out a plan", ko: "좌절 속에 조각났어도", ja: "[砕|くだ]+け[散|ち]+る[器|うつわ]+++", zh: "[四|四|sì|ㄙˋ] [分|分|fēn|ㄈㄣ] [五|五|wǔ|ㄨˇ] [裂|裂|liè|ㄌㄧㄝˋ] [依|依|yī|ㄧ] [旧|舊|jiù|ㄐㄧㄡˋ] [有|有|yǒu|ㄧㄡˇ] [向|向|xiàng|ㄒㄧㄤˋ] [无|無|wú|ㄨˊ] [方|方|fāng|ㄈㄤ]", es: "He-cho peda-zos y aún sin ra-zón", ru: "Пусть раз-ле-те-лись ле-пест-ки тво-и," },
+    { time: 153.75 - 0.02, en: "Yet the eve-ry dai-ly", ko: "매일 기다리네", ja: "[力|ちから]++に[変|か]え", zh: "[可|可|kě|ㄎㄜˇ] [那|那|nà|ㄋㄚˋ] [岁|歲|suì|ㄙㄨㄟˋ] [岁|歲|suì|ㄙㄨㄟˋ] [年|年|nián|ㄋㄧㄢˊ] [年|年|nián|ㄋㄧㄢˊ]", es: "Co-mo tra-di-ción", ru: "Но ми-ну-ли го-ды." },
+    { time: 156 - 0.02, en: "Hope that pow-ered the Flow-er Man", ko: "희<망을> 붙드는 <플라>워 맨", ja: "<Oh> <Oh> [恐|おそ]れぬ<フラ><ワー><マン>", zh: "[给|給|gěi|ㄍㄟˇ] [予|予|yǔ|ㄩˇ] [着|著|zhe|ㄓㄜ˙] [力|力|lì|ㄌㄧˋ] [量|量|liàng|ㄌㄧㄤˋ] [的|的|de|ㄉㄜ˙] [希|希|xī|ㄒㄧ] [望|望|wàng|ㄨㄤˋ]", es: "La espe-ran-za del Hom-bre Flor", ru: "Путь тер-нист, о, ге-рой цве-тов," },
+    { time: 159.38 - 0.02, en: "Would nev-er cow-er off of its path", ko: "고난 뿐인 길 이어져도", ja: "おのれの[道|みち]+へ+と", zh: "[定|定|dìng|ㄉㄧㄥˋ] [好|好|hǎo|ㄏㄠˇ] [方|方|fāng|ㄈㄤ] [向|向|xiàng|ㄒㄧㄤˋ] [就|就|jiù|ㄐㄧㄡˋ] [绝|絕|jué|ㄐㄩㄝˊ] [不|不|bù|ㄅㄨˋ] [退|退|tuì|ㄊㄨㄟˋ] [让|讓|ràng|ㄖㄤˋ]", es: "Que en su sen-da se man-ten-drá", ru: "Да-дут пло-ды тво-и труды" },
+    { time: 162.75 - 0.02, en: "Even if bro-ken I am more than glass", ko: "유리 속에 비친 모습보다", ja: "ガラスが[砕|くだ]+けたって", zh: "[哪|哪|nǎ|ㄋㄚˇ] [怕|怕|pà|ㄆㄚˋ] [再|再|zài|ㄗㄞˋ] [受|受|shòu|ㄕㄡˋ] [伤|傷|shāng|ㄕㄤ] [也|也|yě|ㄧㄝˇ] [比|比|bǐ|ㄅㄧˇ] [玻|玻|bō|ㄅㄛ] [璃|璃|lí|ㄌㄧˊ] [强|強|qiáng|ㄑㄧㄤˊ]", es: "Aún en pe-da-zos soy más que cris-tal", ru: "Вос-ста-нем вмес-те мы про-тив судь-бы" },
+    { time: 165.75 - 0.02, en: "So he lived the", ko: "더욱 강한", ja: "[生|い]きるよ", zh: "[多|多|duō|ㄉㄨㄛ] [执|執|zhí|ㄓˊ] [着|著|zhuó|ㄓㄨㄛˊ] [的|的|de|ㄉㄜ˙]", es: "Así vive el", ru: "Так ско-ре-е" },
+    { time: 167.25 - 0.02, en: "Flow-er Man, Flow-er Man", ko: "<플라>워 맨 <플라>워 맨", ja: "<フラ><ワー><マン> <フラ><ワー><マン>", zh: "[小|小|xiǎo|ㄒㄧㄠˇ] [花|花|huā|ㄏㄨㄚ] [侠|俠|xiá|ㄒㄧㄚˊ]  [小|小|xiǎo|ㄒㄧㄠˇ] [花|花|huā|ㄏㄨㄚ] [侠|俠|xiá|ㄒㄧㄚˊ]", es: "Hom-bre Flor, Hom-bre Flor", ru: "Рас-цве-тай, рас-цве-тай" },
+    { time: 170.25 - 0.02, en: "With his heart in the sand", ko: "모래에 묻은 맘", ja: "[土|つち]+の [奥|おく]+へ", zh: "[寸|寸|cùn|ㄘㄨㄣˋ] [草|草|cǎo|ㄘㄠˇ] [心|心|xīn|ㄒㄧㄣ]  [沙|沙|shā|ㄕㄚ] [中|中|zhōng|ㄓㄨㄥ] [藏|藏|cáng|ㄘㄤˊ]", es: "En-te-rró su cora-zón", ru: "В грунте серд-це ос-тавь" },
+    { time: 173.06 - 0.02, en: "So he stands", ko: "일어서", ja: "<[根|ね]を>[張|は]り", zh: "[把|把|bǎ|ㄅㄚˇ] [头|頭|tóu|ㄊㄡˊ] [仰|仰|yǎng|ㄧㄤˇ]", es: "Al-za-rá", ru: "Гор-до встань" },
+    { time: 175.12 - 0.02, en: "To watch the whole wide world", ko: "이 넓은 세상을", ja: "[世|せ][界|かい]+を[見|み]る", zh: "[望|望|wàng|ㄨㄤˋ] [见|見|jiàn|ㄐㄧㄢˋ] [纷|紛|fēn|ㄈㄣ] [繁|繁|fán|ㄈㄢˊ] [世|世|shì|ㄕˋ] [界|界|jiè|ㄐㄧㄝˋ]", es: "Su vista a un mundo que", ru: "И по-смот-ри на мир" },
+    { time: 177.94 - 0.02, en: "From a can", ko: "바라봐", ja: "[空|そら]+に", zh: "[隔|隔|gé|ㄍㄜˊ] [道|道|dào|ㄉㄠˋ] [墙|牆|qiáng|ㄑㄧㄤˊ]", es: "lo ignoró", ru: "Без те-бя." },
+    { time: 179.25 - 0.02, en: "Way up high in the sky", ko: "저 하늘 내리쬔", ja: "[高|たか]+く [注|そそ]ぐ", zh: "[看|看|kàn|ㄎㄢˋ] [天|天|tiān|ㄊㄧㄢ] [空|空|kōng|ㄎㄨㄥ]  [在|在|zài|ㄗㄞˋ] [发|發|fā|ㄈㄚ] [亮|亮|liàng|ㄌㄧㄤˋ]", es: "En el cie-lo tu albor", ru: "Вы-со-та — не беда," },
+    { time: 182.25 - 0.02, en: "With the sun in your eyes", ko: "햇빛을 <눈에> 담고", ja: "[光|ひかり]++ [浴|あ]びて", zh: "[太|太|tài|ㄊㄞˋ] [阳|陽|yáng|ㄧㄤˊ] [光|光|guāng|ㄍㄨㄤ]  [透|透|tòu|ㄊㄡˋ] [进|進|jìn|ㄐㄧㄣˋ] [房|房|fáng|ㄈㄤˊ]", es: "En tus o-jos el sol", ru: "Солн-це гре-ет гла-за" },
+    { time: 185.06 - 0.02, en: "Ain't it nice", ko: "나날이", ja: "[日|ひ][々|び]は", zh: "[多|多|duō|ㄉㄨㄛ] [明|明|míng|ㄇㄧㄥˊ] [朗|朗|lǎng|ㄌㄤˇ]", es: "¿No es genial?", ru: "Кра-со-та!" },
+    { time: 187.12 - 0.02, en: "The life for-ev-er for", ko: "계속되어 가는", ja: "[続|つづ]+いてゆく", zh: "[花|花|huā|ㄏㄨㄚ] [一|一|yī|ㄧ] [成|成|chéng|ㄔㄥˊ] [不|不|bù|ㄅㄨˋ] [变|變|biàn|ㄅㄧㄢˋ] [的|的|de|ㄉㄜ˙]", es: "La vida de-dicar a las", ru: "Ос-тань-ся жить цвет-ком" },
+    { time: 190.5 - 0.02, en: "Flow-ers", ko: "<플라><워즈>", ja: "<フラ><ワーズ>", zh: "[日|日|rì|ㄖˋ] [常|常|cháng|ㄔㄤˊ]", es: "Flo-res", ru: "Веч-но" },
     { time: 192 - 0.02, en: "", ko: "", ja: "", zh: "", es: "", ru: "" }
 ];
 
@@ -241,7 +315,6 @@ function parseSyllables(text, lang, startNoteIdx) {
     let currentIdx = startNoteIdx;
     let buffer = "";
 
-    // 영어(en), 스페인어(es), 러시아어(ru)
     if (lang === 'en' || lang === 'es' || lang === 'ru') {
         for (let i = 0; i < text.length; i++) {
             let char = text[i];
@@ -266,11 +339,50 @@ function parseSyllables(text, lang, startNoteIdx) {
             syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
         }
     } else { 
-        // 한국어(ko), 일본어(ja), 중국어(zh)
         let inBracket = false;
         for (let i = 0; i < text.length; i++) {
             let char = text[i];
-            if (char === '<' || char === '＜') {
+            
+            if (char === '[') {
+                if (buffer.length > 0 && !inBracket && buffer.trim() !== "") {
+                    syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+                    currentIdx++; buffer = "";
+                }
+                
+                let endIdx = text.indexOf(']', i);
+                let rubyContent = text.substring(i + 1, endIdx); 
+                let parts = rubyContent.split('|');
+                
+                let rubyHTML = "";
+                if (lang === 'zh') {
+                    let scriptMode = document.querySelector('input[name="zh-script"]:checked')?.value || 'simp';
+                    let rubyMode = document.querySelector('input[name="zh-ruby"]:checked')?.value || 'none';
+                    
+                    let baseText = (scriptMode === 'trad' && parts.length > 1) ? parts[1] : parts[0];
+                    let rtText = "";
+                    if (rubyMode === 'pinyin' && parts.length > 2) rtText = parts[2];
+                    else if (rubyMode === 'bopo' && parts.length > 3) rtText = parts[3];
+                    
+                    if (rtText) {
+                        rubyHTML = `<ruby>${baseText}<rt>${rtText}</rt></ruby>`;
+                    } else {
+                        rubyHTML = baseText;
+                    }
+                } else {
+                    let kanji = parts[0];
+                    let furi = parts[1] || "";
+                    let showRuby = document.getElementById("chk-ruby") ? document.getElementById("chk-ruby").checked : true;
+                    rubyHTML = showRuby && furi ? `<ruby>${kanji}<rt>${furi}</rt></ruby>` : kanji;
+                }
+                
+                buffer += rubyHTML;
+                i = endIdx; 
+                
+                if (!inBracket) {
+                    syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+                    currentIdx++; buffer = "";
+                }
+            } else if (char === '<' || char === '＜') {
                 if (buffer.length > 0) {
                     syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
                     currentIdx++; buffer = "";
@@ -321,7 +433,6 @@ const timeline = document.getElementById("timeline");
 const timeDisplay = document.getElementById("time-display");
 const syncOffsetInput = document.getElementById("sync-offset");
 
-// 추가된 언어를 langs 배열과 checkBoxes 객체에 등록
 const langs = ['ko', 'en', 'ja', 'zh', 'es', 'ru'];
 const checkBoxes = { 
     ko: document.getElementById("chk-ko"), 
@@ -339,6 +450,14 @@ let contentDirty = false;
 
 Object.values(checkBoxes).forEach(cb => {
     cb.addEventListener("change", () => { contentDirty = true; });
+});
+
+if (document.getElementById("chk-ruby")) {
+    document.getElementById("chk-ruby").addEventListener("change", () => { contentDirty = true; });
+}
+
+document.querySelectorAll('input[name="zh-script"], input[name="zh-ruby"]').forEach(el => {
+    el.addEventListener("change", () => { contentDirty = true; });
 });
 
 function formatTime(secs) {
