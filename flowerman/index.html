@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowerman Arrangement - Lyrics</title>
+    <style>
+        @font-face { font-family: 'en-font'; src: url('DeterminationSansWebRegular-369X.ttf'); }
+        @font-face { font-family: 'ko-font'; src: url('DeltaDotumKR.ttf'); }
+        @font-face { font-family: 'ja-font'; src: url('JF-Dot-Shinonome14.ttf'); }
+        @font-face { font-family: 'zh-font'; src: url('russian.ttf'); }
+        @font-face { font-family: 'es-font'; src: url('DeterminationSansWebRegular-369X.ttf'); }
+        @font-face { font-family: 'ru-font'; src: url('russian.ttf'); }
+
+        body {
+            background-color: #000; 
+            color: white;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: sans-serif;
+            image-rendering: pixelated;
+            font-smooth: never;
+            -webkit-font-smoothing: none;
+        }
+
+        #bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -10; 
+            pointer-events: none;
+            filter: brightness(0.35);
+        }
+
+        #ui {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            z-index: 100;
+            border-bottom: 2px solid #222;
+        }
+
+        button { background: #222; color: #fff; border: 1px solid #555; padding: 8px 15px; font-size: 16px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #444; }
+
+        .time-controls { display: flex; align-items: center; gap: 10px; flex: 1; }
+        #timeline { flex: 1; cursor: pointer; accent-color: #008000; }
+        #time-display { font-family: monospace; font-size: 16px; min-width: 100px; text-align: right; }
+        
+        .sync-control { display: flex; align-items: center; gap: 5px; font-size: 14px; background: #111; padding: 5px 10px; border-radius: 4px; border: 1px solid #444; }
+        .sync-control input { width: 50px; background: transparent; color: white; border: none; font-size: 14px; text-align: center; }
+
+        .lang-toggles { display: flex; gap: 15px; font-size: 16px; flex-wrap: wrap; }
+        .lang-toggles label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+        #master {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center center;
+        }
+
+        .layer.main { z-index: 10; }
+        .layer.ghost {
+            mix-blend-mode: plus-lighter; 
+            pointer-events: none;
+            z-index: 20; 
+        }
+
+        .font-en { font-family: 'en-font'; }
+        .font-ko { font-family: 'ko-font'; }
+        .font-ja { font-family: 'ja-font'; }
+        .font-zh { font-family: 'zh-font'; }
+        .font-es { font-family: 'es-font'; }
+        .font-ru { font-family: 'ru-font'; }
+
+        .lang-row {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: center;
+            font-size: 52px;
+            margin-bottom: 25px;
+        }
+
+        .syl {
+            position: relative;
+            display: block;
+            white-space: pre;
+            line-height: 1.2;
+        }
+
+        .base {
+            display: block;
+            padding: 12px;
+            margin: -12px;
+            color: #ffff00;
+            text-shadow: 
+                -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000,
+                -2px  0   0 #000,                2px  0   0 #000,
+                -2px  2px 0 #000, 0  2px 0 #000, 2px  2px 0 #000;
+        }
+
+        .fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: block;
+            padding: 12px;
+            margin: -12px;
+            color: var(--fill-col, #008000);
+            text-shadow: 
+                -2px -2px 0 #fff, 0 -2px 0 #fff, 2px -2px 0 #fff,
+                -2px  0   0 #fff,                2px  0   0 #fff,
+                -2px  2px 0 #fff, 0  2px 0 #fff, 2px  2px 0 #fff;
+            clip-path: inset(0 calc(100% - var(--prog, 0%)) 0 0);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <video id="bg-video" src="bg.mp4" autoplay loop muted playsinline></video>
+
+    <div id="ui">
+        <button id="play-btn">▶ Play</button>
+        <div class="time-controls">
+            <input type="range" id="timeline" min="0" max="100" value="0" step="0.01">
+            <span id="time-display">0:00 / 0:00</span>
+        </div>
+        
+        <div class="sync-control">
+            <label for="sync-offset">Sync:</label>
+            <input type="number" id="sync-offset" step="0.05" value="0.2">s
+        </div>
+
+        <div class="lang-toggles">
+            <label><input type="checkbox" id="chk-ko" checked> KO</label>
+            <label><input type="checkbox" id="chk-en" checked> EN</label>
+            <label><input type="checkbox" id="chk-ja" checked> JA</label>
+            <label><input type="checkbox" id="chk-zh" checked> ZH</label>
+            <label><input type="checkbox" id="chk-es" checked> ES</label>
+            <label><input type="checkbox" id="chk-ru" checked> RU</label>
+        </div>
+    </div>
+
+    <div id="master">
+        <div id="layer-main" class="layer main"></div>
+        <div id="layer-ghost-0" class="layer ghost"></div>
+        <div id="layer-ghost-1" class="layer ghost"></div>
+        <div id="layer-ghost-2" class="layer ghost"></div>
+        <div id="layer-ghost-3" class="layer ghost"></div>
+        <div id="layer-ghost-4" class="layer ghost"></div>
+        <div id="layer-ghost-5" class="layer ghost"></div>
+        <div id="layer-ghost-6" class="layer ghost"></div>
+        <div id="layer-ghost-7" class="layer ghost"></div>
+    </div>
+
+    <audio id="bgm" src="Flowerman_Arrangement.ogg"></audio>
+
+<script>
+const notetime = [24, 24.38, 24.75, 25.03, 25.31, 25.5, 25.88, 26.25, 27.38, 27.75, 28.12, 28.5, 28.78, 29.06, 29.44, 29.62, 30, 30.75, 31.03, 31.31, 31.5, 31.78, 32.06, 32.44, 32.62, 32.81, 33, 33.75, 34.12, 34.5, 34.88, 35.25, 35.62, 36, 36.38, 36.75, 37.03, 37.31, 37.5, 37.88, 38.25, 39.38, 39.75, 40.12, 40.5, 40.78, 41.06, 41.44, 41.62, 42, 42.75, 43.03, 43.31, 43.5, 43.78, 44.06, 44.44, 44.62, 44.81, 45, 45.75, 46.12, 46.5, 46.88, 47.25, 47.62, 48, 48.75, 49.12, 49.5, 50.25, 50.53, 50.81, 51.75, 52.03, 52.31, 53.06, 53.62, 54, 55.12, 55.5, 55.88, 56.25, 56.62, 56.91, 57.94, 58.12, 58.31, 59.25, 59.62, 60, 60.75, 61.12, 61.5, 62.25, 62.53, 62.81, 63.75, 64.03, 64.31, 65.06, 65.62, 66, 67.12, 67.5, 67.88, 68.25, 68.62, 69, 70.5, 71.25, 144, 144.38, 144.75, 145.03, 145.31, 145.5, 145.88, 146.25, 147.38, 147.75, 148.12, 148.5, 148.78, 149.06, 149.44, 149.62, 150, 150.75, 151.03, 151.31, 151.5, 151.78, 152.06, 152.44, 152.62, 152.81, 153, 153.75, 154.12, 154.5, 154.88, 155.25, 155.62, 156, 156.38, 156.75, 157.03, 157.31, 157.5, 157.88, 158.25, 159.38, 159.75, 160.12, 160.5, 160.78, 161.06, 161.44, 161.62, 162, 162.75, 163.03, 163.31, 163.5, 163.78, 164.06, 164.44, 164.62, 164.81, 165, 165.75, 166.12, 166.5, 166.88, 167.25, 167.62, 168, 168.75, 169.12, 169.5, 170.25, 170.53, 170.81, 171.75, 172.03, 172.31, 173.06, 173.62, 174, 175.12, 175.5, 175.88, 176.25, 176.62, 176.91, 177.94, 178.12, 178.31, 179.25, 179.62, 180, 180.75, 181.12, 181.5, 182.25, 182.53, 182.81, 183.75, 184.03, 184.31, 185.06, 185.62, 186, 187.12, 187.5, 187.88, 188.25, 188.62, 189, 190.5, 191.25];
+const noteend = [24.09, 24.47, 25.03, 25.31, 25.5, 25.88, 25.97, 27, 27.75, 28.12, 28.5, 28.69, 28.88, 29.44, 29.62, 30, 30.75, 31.03, 31.31, 31.5, 31.78, 31.88, 32.44, 32.62, 32.81, 33, 33.75, 34.12, 34.5, 34.88, 35.25, 35.62, 36, 36.09, 36.47, 37.03, 37.31, 37.5, 37.88, 37.97, 39, 39.75, 40.12, 40.5, 40.69, 40.88, 41.44, 41.62, 42, 42.75, 43.03, 43.31, 43.5, 43.78, 43.88, 44.44, 44.62, 44.81, 45, 45.75, 46.12, 46.5, 46.88, 47.25, 47.62, 48, 48.75, 49.12, 49.5, 50.25, 50.44, 50.72, 51.38, 51.94, 52.22, 52.88, 53.62, 54, 54.75, 55.5, 55.88, 56.25, 56.62, 56.91, 57.75, 58.12, 58.31, 59.25, 59.62, 60, 60.75, 61.12, 61.5, 62.25, 62.44, 62.72, 63.38, 63.94, 64.22, 64.88, 65.62, 66, 66.75, 67.5, 67.88, 68.25, 68.62, 69, 70.5, 71.25, 72, 144.09, 144.47, 145.03, 145.31, 145.5, 145.88, 145.97, 147, 147.75, 148.12, 148.5, 148.69, 148.88, 149.44, 149.62, 150, 150.75, 151.03, 151.31, 151.5, 151.78, 151.88, 152.44, 152.62, 152.81, 153, 153.75, 154.12, 154.5, 154.88, 155.25, 155.62, 156, 156.09, 156.47, 157.03, 157.31, 157.5, 157.88, 157.97, 159, 159.75, 160.12, 160.5, 160.69, 160.88, 161.44, 161.62, 162, 162.75, 163.03, 163.31, 163.5, 163.78, 163.88, 164.44, 164.62, 164.81, 165, 165.75, 166.12, 166.5, 166.88, 167.25, 167.62, 168, 168.75, 169.12, 169.5, 170.25, 170.44, 170.72, 171.38, 171.94, 172.22, 172.88, 173.62, 174, 174.75, 175.5, 175.88, 176.25, 176.62, 176.91, 177.75, 178.12, 178.31, 179.25, 179.62, 180, 180.75, 181.12, 181.5, 182.25, 182.44, 182.72, 183.38, 183.94, 184.22, 184.88, 185.62, 186, 186.75, 187.5, 187.88, 188.25, 188.62, 189, 190.5, 191.25, 192];
+const beattime = [48.19, 48.56, 48.94, 49.31, 49.67, 50.04, 50.42, 50.79, 51.17, 51.54, 51.92, 52.29, 52.67, 53.04, 53.42, 53.79, 54.17, 54.54, 54.92, 55.29, 55.67, 56.04, 56.42, 56.79, 57.17, 57.54, 57.92, 58.29, 58.5, 58.78, 59.25, 59.53, 60.17, 60.54, 60.92, 61.29, 61.67, 62.04, 62.42, 62.79, 63.17, 63.54, 63.92, 64.29, 64.67, 65.04, 65.42, 65.79, 66.17, 66.54, 66.92, 67.29, 67.67, 68.04, 68.42, 68.79, 69, 69.09, 69.19, 69.28, 69.38, 69.47, 69.56, 69.66, 69.75, 69.84, 69.94, 70.03, 70.12, 70.22, 70.31, 70.41, 70.5, 71.25, 168.19, 168.56, 168.94, 169.31, 169.67, 170.04, 170.42, 170.79, 171.17, 171.54, 171.92, 172.29, 172.67, 173.04, 173.42, 173.79, 174.17, 174.54, 174.92, 175.29, 175.67, 176.04, 176.42, 176.79, 177.17, 177.54, 177.92, 178.29, 178.5, 178.78, 179.25, 179.53, 180.17, 180.54, 180.92, 181.29, 181.67, 182.04, 182.42, 182.79, 183.17, 183.54, 183.92, 184.29, 184.67, 185.04, 185.42, 185.79, 186.17, 186.54, 186.92, 187.29, 187.67, 188.04, 188.42, 188.79, 189, 189.09, 189.19, 189.28, 189.38, 189.47, 189.56, 189.66, 189.75, 189.84, 189.94, 190.03, 190.12, 190.22, 190.31, 190.41, 190.5];
+
+const lyricsData = [
+    { time: 0, en: "", ko: "", ja: "", zh: "", es: "", ru: "" },
+    { time: 24 - 0.02, en: "Ten feet twen-ty the Flow-er Man", ko: "3.5미터 <플라>워 맨", ja: "<10>尺20の <フラ><ワー><マン>", zh: "三 米 五 六 的 小 花 侠", es: "Son tres me-tros de Hom-bre Flor", ru: "Рас-цве-тай, о, ге-рой цве-тов," },
+    { time: 27.38 - 0.02, en: "Is wai-ting for the touch of his hand", ko: "꽃잎을 펴주는 손길을", ja: "その手で触れてよ", zh: "期 盼 那 双 手 呵 护 有 加", es: "Su ma-no aguar-da por su ca-lor", ru: "Ру-ки при-кос-но-вения не жди," },
+    { time: 30.75 - 0.02, en: "Straight-en-ing pe-tals out with-out a plan", ko: "자신도 돌볼 수 없으면서", ja: "この花+びら 全+部+", zh: "整 理 着 花 瓣 却 有 向 无 方", es: "A-li-sa pé-ta-los sin ra-zón", ru: "По-мыс-ла нет, но ле-пест-ки тя-ни," },
+    { time: 33.75 - 0.02, en: "Like the eve-ry dai-ly", ko: "매일 기다리네", ja: "整++えてよ", zh: "只 顾 那 个 每 天", es: "Co-mo tra-di-ción", ru: "Пусть ми-ну-ли го-ды" },
+    { time: 36 - 0.02, en: "Wish that both-ers the Flow-er Man", ko: "소원을 품은 <플라>워 맨", ja: "<Woo> <Woo> 愁いの<フラ><ワー><マン>", zh: "萦 绕 在 心 头 的 愿 望", es: "Un de-seo acecha al Hom-bre Flor", ru: "Не тре-вожь-ся, ге-рой цве-тов," },
+    { time: 39.38 - 0.02, en: "Could I do some-thing to make him laugh", ko: "당신을 웃게 할 방법을", ja: "ガラスの器+++の", zh: "如 何 能 让 他 笑 得 欢 畅", es: "Qu-izá su ri-sa pue-da encont-rar", ru: "По-бе-ги сме-хом сво-им ороши," },
+    { time: 42.75 - 0.02, en: "In-side my lit-tle cham-ber made of glass", ko: "그 작은 유리병 속에서", ja: "中+で願+うの++は", zh: "生 活 在 我 的 小 小 玻 璃 缸", es: "Tras esta cá-mara he-cha de cris-tal", ru: "Из-—под стек-ла тщет-ны на-ши моль-бы." },
+    { time: 45.75 - 0.02, en: "So he lived the", ko: "고민하던", ja: "あの<笑顔>", zh: "苦 恼 着 的", es: "Así vive el", ru: "Но ско-ре-е" },
+    { time: 47.25 - 0.02, en: "Flow-er Man, Flow-er Man", ko: "<플라>워 맨 <플라>워 맨", ja: "<フラ><ワー><マン> <フラ><ワー><マン>", zh: "小 花 侠  小 花 侠", es: "Hom-bre Flor, Hom-bre Flor", ru: "Рас-цве-тай, рас-цве-тай," },
+    { time: 50.25 - 0.02, en: "With his heart in the sand", ko: "모래에 묻은 맘", ja: "土+の 奥+へ", zh: "寸 草 心  沙 中 藏", es: "En-te-rró su cora-zón", ru: "В грунте серд-це ос-тавь," },
+    { time: 53.06 - 0.02, en: "So he stands", ko: "일어서", ja: "<根を>張り", zh: "把 头 仰", es: "Al-za-rá", ru: "Гор-до встань" },
+    { time: 55.12 - 0.02, en: "To watch the whole wide world", ko: "이 넓은 세상을", ja: "世界+を見る", zh: "望 见 纷 繁 世 界", es: "Su vista a un mundo que", ru: "И по-смот-ри на мир" },
+    { time: 57.94 - 0.02, en: "From a can", ko: "바라봐", ja: "空+に", zh: "隔 道 墙", es: "lo ignoró", ru: "Без те-бя." },
+    { time: 59.25 - 0.02, en: "Way up high in the sky", ko: "저 하늘 내리쬔", ja: "高+く 注+ぐ", zh: "看 天 空  在 发 亮", es: "En el cie-lo su albor", ru: "Вы-со-та — не беда," },
+    { time: 62.25 - 0.02, en: "With the sun in his eyes", ko: "햇빛을 <눈에> 담고", ja: "光++ 浴びて", zh: "太 阳 光  透 进 房", es: "En sus o-jos el sol", ru: "Солн-це гре-ет гла-за," },
+    { time: 65.06 - 0.02, en: "Ain't it nice", ko: "나날이", ja: "日々は", zh: "多 明 朗", es: "¿No es genial?", ru: "Кра-со-та!" },
+    { time: 67.12 - 0.02, en: "The life for-ev-er for", ko: "계속되어 가는", ja: "続+いてゆく", zh: "花 一 成 不 变 的", es: "La vida de-dicar a las", ru: "Ос-тань-ся жить цвет-ком" },
+    { time: 70.5 - 0.02, en: "Flow-ers", ko: "<플라><워즈>", ja: "<フラ><ワーズ>", zh: "日 常", es: "Flo-res", ru: "Веч-но" },
+    { time: 72 - 0.02, en: "", ko: "", ja: "", zh: "", es: "", ru: "" },
+    { time: 144 - 0.02, en: "Ten feet twen-ty the Flow-er Man", ko: "3.5미터 <플라>워 맨", ja: "<10>尺20の <フラ><ワー><マン>", zh: "三 米 五 六 的 小 花 侠", es: "Son tres me-tros de Hom-bre Flor", ru: "Рас-цве-тай, о, ге-рой цве-тов," },
+    { time: 147.38 - 0.02, en: "Is wait-ing for the touch of his hand", ko: "꽃잎을 펴주는 손길을", ja: "その手で触れてよ", zh: "期 盼 那 双 手 呵 护 有 加", es: "Su ma-no aguar-da por su ca-lor", ru: "Ру-ки при-кос-но-вения не жди," },
+    { time: 150.75 - 0.02, en: "Fall-en to pie-ces still with-out a plan", ko: "좌절 속에 조각났어도", ja: "砕+け散+る器+++", zh: "四 分 五 裂 依 旧 有 向 无 方", es: "He-cho peda-zos y aún sin ra-zón", ru: "Пусть раз-ле-те-лись ле-пест-ки тво-и," },
+    { time: 153.75 - 0.02, en: "Yet the eve-ry dai-ly", ko: "매일 기다리네", ja: "力++に変え", zh: "可 那 岁 岁 年 年", es: "Co-mo tra-di-ción", ru: "Но ми-ну-ли го-ды." },
+    { time: 156 - 0.02, en: "Hope that pow-ered the Flow-er Man", ko: "희<망을> 붙드는 <플라>워 맨", ja: "<Oh> <Oh> 恐れぬ<フラ><ワー><マン>", zh: "给 予 着 力 量 的 希 望", es: "La espe-ran-za del Hom-bre Flor", ru: "Путь тер-нист, о, ге-рой цве-тов," },
+    { time: 159.38 - 0.02, en: "Would nev-er cow-er off of its path", ko: "고난 뿐인 길 이어져도", ja: "おのれの道+へ+と", zh: "定 好 方 向 就 绝 不 退 让", es: "Que en su sen-da se man-ten-drá", ru: "Да-дут пло-ды тво-и труды" },
+    { time: 162.75 - 0.02, en: "Even if bro-ken I am more than glass", ko: "유리 속에 비친 모습보다", ja: "ガラスが砕+けたって", zh: "哪 怕 再 受 伤 也 比 玻 璃 强", es: "Aún en pe-da-zos soy más que cris-tal", ru: "Вос-ста-нем вмес-те мы про-тив судь-бы" },
+    { time: 165.75 - 0.02, en: "So he lived the", ko: "더욱 강한", ja: "生きるよ", zh: "多 执 着 的", es: "Así vive el", ru: "Так ско-ре-е" },
+    { time: 167.25 - 0.02, en: "Flow-er Man, Flow-er Man", ko: "<플라>워 맨 <플라>워 맨", ja: "<フラ><ワー><マン> <フラ><ワー><マン>", zh: "小 花 侠  小 花 侠", es: "Hom-bre Flor, Hom-bre Flor", ru: "Рас-цве-тай, рас-цве-тай" },
+    { time: 170.25 - 0.02, en: "With his heart in the sand", ko: "모래에 묻은 맘", ja: "土+の 奥+へ", zh: "寸 草 心  沙 中 藏", es: "En-te-rró su cora-zón", ru: "В грунте серд-це ос-тавь" },
+    { time: 173.06 - 0.02, en: "So he stands", ko: "일어서", ja: "<根を>張り", zh: "把 头 仰", es: "Al-za-rá", ru: "Гор-до встань" },
+    { time: 175.12 - 0.02, en: "To watch the whole wide world", ko: "이 넓은 세상을", ja: "世界+を見る", zh: "望 见 纷 繁 世 界", es: "Su vista a un mundo que", ru: "И по-смот-ри на мир" },
+    { time: 177.94 - 0.02, en: "From a can", ko: "바라봐", ja: "空+に", zh: "隔 道 墙", es: "lo ignoró", ru: "Без те-бя." },
+    { time: 179.25 - 0.02, en: "Way up high in the sky", ko: "저 하늘 내리쬔", ja: "高+く 注+ぐ", zh: "看 天 空  在 发 亮", es: "En el cie-lo tu albor", ru: "Вы-со-та — не беда," },
+    { time: 182.25 - 0.02, en: "With the sun in your eyes", ko: "햇빛을 <눈에> 담고", ja: "光++ 浴びて", zh: "太 阳 光  透 进 房", es: "En tus o-jos el sol", ru: "Солн-це гре-ет гла-за" },
+    { time: 185.06 - 0.02, en: "Ain't it nice", ko: "나날이", ja: "日々は", zh: "多 明 朗", es: "¿No es genial?", ru: "Кра-со-та!" },
+    { time: 187.12 - 0.02, en: "The life for-ev-er for", ko: "계속되어 가는", ja: "続+いてゆく", zh: "花 一 成 不 变 的", es: "La vida de-dicar a las", ru: "Ос-тань-ся жить цвет-ком" },
+    { time: 190.5 - 0.02, en: "Flow-ers", ko: "<플라><워즈>", ja: "<フラ><ワーズ>", zh: "日 常", es: "Flo-res", ru: "Веч-но" },
+    { time: 192 - 0.02, en: "", ko: "", ja: "", zh: "", es: "", ru: "" }
+];
+
+let globalIdx = 0;
+for (let i = 0; i < lyricsData.length; i++) {
+    let line = lyricsData[i];
+    while (globalIdx < notetime.length && noteend[globalIdx] <= line.time + 0.05) {
+        globalIdx++;
+    }
+    line.startNoteIdx = globalIdx;
+}
+
+function parseSyllables(text, lang, startNoteIdx) {
+    let syllables = [];
+    let currentIdx = startNoteIdx;
+    let buffer = "";
+
+    // 영어(en), 스페인어(es), 러시아어(ru)
+    if (lang === 'en' || lang === 'es' || lang === 'ru') {
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i];
+            if (char === '-') {
+                if (buffer.length > 0) {
+                    syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+                    currentIdx++; buffer = "";
+                }
+            } else if (char === ' ') {
+                if (buffer.length > 0) {
+                    buffer += " ";
+                    syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+                    currentIdx++; buffer = "";
+                } else if (syllables.length > 0) {
+                    syllables[syllables.length - 1].text += " ";
+                }
+            } else {
+                buffer += char;
+            }
+        }
+        if (buffer.length > 0) {
+            syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+        }
+    } else { 
+        // 한국어(ko), 일본어(ja), 중국어(zh)
+        let inBracket = false;
+        for (let i = 0; i < text.length; i++) {
+            let char = text[i];
+            if (char === '<' || char === '＜') {
+                if (buffer.length > 0) {
+                    syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+                    currentIdx++; buffer = "";
+                }
+                inBracket = true;
+            } else if (char === '>' || char === '＞') {
+                inBracket = false;
+                if (buffer.length > 0) {
+                    syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+                    currentIdx++; buffer = "";
+                }
+            } else if (char === '+' || char === '＋') {
+                if (syllables.length > 0) syllables[syllables.length - 1].endIdx++;
+                currentIdx++;
+            } else if (char === ' ') {
+                if (buffer.length > 0) {
+                    buffer += " ";
+                } else if (syllables.length > 0) {
+                    syllables[syllables.length - 1].text += " ";
+                }
+            } else {
+                buffer += char;
+                if (!inBracket) {
+                    syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+                    currentIdx++; buffer = "";
+                }
+            }
+        }
+        if (buffer.length > 0) {
+            syllables.push({ text: buffer, startIdx: currentIdx, endIdx: currentIdx });
+        }
+    }
+    return syllables;
+}
+
+const audio = document.getElementById("bgm");
+const master = document.getElementById("master");
+const layerMain = document.getElementById("layer-main");
+const layerGhosts = [
+    document.getElementById("layer-ghost-0"), document.getElementById("layer-ghost-1"),
+    document.getElementById("layer-ghost-2"), document.getElementById("layer-ghost-3"),
+    document.getElementById("layer-ghost-4"), document.getElementById("layer-ghost-5"),
+    document.getElementById("layer-ghost-6"), document.getElementById("layer-ghost-7")
+];
+
+const playBtn = document.getElementById("play-btn");
+const timeline = document.getElementById("timeline");
+const timeDisplay = document.getElementById("time-display");
+const syncOffsetInput = document.getElementById("sync-offset");
+
+// 추가된 언어를 langs 배열과 checkBoxes 객체에 등록
+const langs = ['ko', 'en', 'ja', 'zh', 'es', 'ru'];
+const checkBoxes = { 
+    ko: document.getElementById("chk-ko"), 
+    en: document.getElementById("chk-en"), 
+    ja: document.getElementById("chk-ja"),
+    zh: document.getElementById("chk-zh"),
+    es: document.getElementById("chk-es"),
+    ru: document.getElementById("chk-ru")
+};
+
+let currentLineIndex = -1;
+let strength = 0;
+let activeSyllables = [];
+let contentDirty = false;
+
+Object.values(checkBoxes).forEach(cb => {
+    cb.addEventListener("change", () => { contentDirty = true; });
+});
+
+function formatTime(secs) {
+    if (isNaN(secs)) return "0:00";
+    let m = Math.floor(secs / 60);
+    let s = Math.floor(secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+}
+
+playBtn.addEventListener("click", () => {
+    if (audio.paused) { 
+        audio.play(); 
+        playBtn.innerText = "⏸ Pause"; 
+        document.getElementById("bg-video").play();
+    } else { 
+        audio.pause(); 
+        playBtn.innerText = "▶ Play"; 
+        document.getElementById("bg-video").pause();
+    }
+});
+
+audio.addEventListener("loadedmetadata", () => {
+    timeline.max = audio.duration;
+    timeDisplay.innerText = `0:00 / ${formatTime(audio.duration)}`;
+});
+
+timeline.addEventListener("input", (e) => {
+    audio.currentTime = e.target.value;
+    timeDisplay.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+});
+
+function loop() {
+    requestAnimationFrame(loop);
+
+    let syncOffset = parseFloat(syncOffsetInput.value) || 0;
+    let trackpos = audio.currentTime + syncOffset;
+    
+    if (!audio.paused) {
+        timeline.value = audio.currentTime;
+        timeDisplay.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    }
+
+    if (trackpos >= 166 || (trackpos >= 46 && trackpos < 120)) {
+        strength = Math.min(strength + 0.015, 1);
+    } else {
+        strength = Math.max(strength - 0.05, 0);
+    }
+
+    let lastBeat = -1;
+    for (let b of beattime) {
+        if (trackpos >= b) lastBeat = b;
+        else break;
+    }
+    let beat = 0;
+    if (lastBeat !== -1) {
+        let timeSince = trackpos - lastBeat;
+        let beatDur = 60 / 160;
+        if (timeSince < beatDur) beat = 1 - (timeSince / beatDur);
+    }
+
+    master.style.opacity = 0.6 + (strength * 0.4);
+
+    for (let i = 0; i < 8; i++) {
+        let pow = (i + 1) / 8;
+        let scale = 1 + (strength * pow) / 2 + (beat / 10);
+        let opacity = Math.max(0, (0.2 * strength * (1 - pow)));
+        
+        layerGhosts[i].style.transform = `scale(${scale})`;
+        layerGhosts[i].style.opacity = opacity;
+    }
+
+    let newIndex = 0;
+    for (let i = 0; i < lyricsData.length; i++) {
+        if (trackpos >= lyricsData[i].time) newIndex = i;
+        else break;
+    }
+
+    if (newIndex !== currentLineIndex || contentDirty) {
+        currentLineIndex = newIndex;
+        contentDirty = false;
+        activeSyllables = [];
+        
+        let htmlContent = "";
+        langs.forEach(lang => {
+            if (checkBoxes[lang].checked && lyricsData[currentLineIndex][lang]) {
+                htmlContent += `<div class="lang-row font-${lang}">`;
+                let syls = parseSyllables(lyricsData[currentLineIndex][lang], lang, lyricsData[currentLineIndex].startNoteIdx);
+                
+                syls.forEach((syl, index) => {
+                    let id = `syl-${lang}-${index}`;
+                    activeSyllables.push({ id: id, startT: notetime[syl.startIdx], endT: noteend[syl.endIdx] });
+                    
+                    htmlContent += `<div class="syl" style="--prog: var(--${id}, 0%)"><div class="base">${syl.text}</div><div class="fill">${syl.text}</div></div>`;
+                });
+                htmlContent += `</div>`;
+            }
+        });
+
+        layerMain.innerHTML = htmlContent;
+        layerGhosts.forEach(g => g.innerHTML = htmlContent);
+    }
+
+    let extraPow = 0;
+    if (currentLineIndex === 18 || currentLineIndex === 37) {
+        let glowstart = (currentLineIndex === 37) ? 191 : 71;
+        extraPow = Math.max(Math.min(trackpos - glowstart, 1), 0);
+    }
+    let r = Math.round(255 * extraPow);
+    let gColor = Math.round(128 + (127 * extraPow));
+    let b = Math.round(255 * extraPow);
+    master.style.setProperty('--fill-col', `rgb(${r}, ${gColor}, ${b})`);
+
+    activeSyllables.forEach(s => {
+        let p = 0;
+        if (trackpos >= s.endT) p = 100;
+        else if (trackpos > s.startT) p = ((trackpos - s.startT) / (s.endT - s.startT)) * 100;
+        master.style.setProperty(`--${s.id}`, `${p}%`);
+    });
+}
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
