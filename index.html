@@ -16,12 +16,13 @@
             DYm9AAAAAElFTkSuQmCC"
         />
         
+        <!-- 전역 텍스트 데이터 로드 -->
         <script src="rendered.json.js"></script>
         
         <style>
             @font-face {
                 font-family: 'Deltarune Font';
-                src: url('./gulim-13px.ttf') format('truetype');
+                src: url('static/gulim-13px.ttf') format('truetype');
                 font-weight: normal;
                 font-display: swap;
             }
@@ -108,54 +109,18 @@
                 font-size: 0.9em;
             }
 
-            .menu-toggle {
-                display: none;
-                width: 100%;
-                padding: 12px;
-                font-weight: bold;
-            }
-
-            .controls-wrapper {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .control-row {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 12px;
-                align-items: center;
-            }
-
+            .menu-toggle { display: none; width: 100%; padding: 12px; font-weight: bold; }
+            .controls-wrapper { display: flex; flex-direction: column; gap: 12px; }
+            .control-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
             .control-group {
-                display: flex;
-                gap: 8px;
-                align-items: center;
-                background: rgba(0, 0, 0, 0.1);
-                padding: 6px 10px;
-                border-radius: 8px;
-                border: 1px solid var(--border-color);
+                display: flex; gap: 8px; align-items: center;
+                background: rgba(0, 0, 0, 0.1); padding: 6px 10px;
+                border-radius: 8px; border: 1px solid var(--border-color);
             }
 
-            .search-wrapper {
-                position: relative;
-                display: flex;
-                align-items: center;
-            }
-
-            .search-wrapper svg {
-                position: absolute;
-                left: 10px;
-                width: 16px;
-                height: 16px;
-                opacity: 0.6;
-            }
-
-            .search-wrapper input {
-                padding-left: 32px;
-                width: 200px;
-            }
+            .search-wrapper { position: relative; display: flex; align-items: center; }
+            .search-wrapper svg { position: absolute; left: 10px; width: 16px; height: 16px; opacity: 0.6; }
+            .search-wrapper input { padding-left: 32px; width: 200px; }
 
             @media (max-width: 768px) {
                 .menu-toggle { display: flex; }
@@ -166,125 +131,60 @@
             }
 
             h1, h2 {
-                font-size: 2em;
-                line-height: 1em;
-                font-weight: normal;
-                padding-left: 20px;
-                margin-top: 30px;
-                margin-bottom: 15px;
+                font-size: 2em; line-height: 1em; font-weight: normal;
+                padding-left: 20px; margin-top: 30px; margin-bottom: 15px;
                 font-family: "Deltarune Font", Monospace;
             }
 
-            h1 a, h2 a {
-                color: var(--text-color);
-                text-decoration: none;
-            }
-
+            h1 a, h2 a { color: var(--text-color); text-decoration: none; }
             span.breakable { word-break: break-all; }
 
+            /* 렌더링 최적화 (content-visibility 적용) */
             .msg-group {
-                position: relative;
-                padding-left: 40px;
-                margin-bottom: 12px;
-                border-bottom: 1px dashed var(--border-color);
-                padding-bottom: 12px;
-                content-visibility: auto;
-                contain-intrinsic-size: auto 40px;
+                position: relative; padding-left: 40px; margin-bottom: 12px;
+                border-bottom: 1px dashed var(--border-color); padding-bottom: 12px;
+                content-visibility: auto; contain-intrinsic-size: auto 40px;
                 transition: background 0.2s, border-color 0.2s;
             }
 
             #textboxes.grid-view .msg-group {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 20px;
+                display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;
             }
 
             div.textbox {
-                white-space: pre-wrap;
-                padding: 5px 0;
+                white-space: pre-wrap; padding: 5px 0;
                 font-family: "Deltarune Font", Monospace;
             }
 
             div.untranslated {
-                color: #ff6b6b;
-                background: rgba(255, 0, 0, 0.05);
-                border-left: 4px solid #ff6b6b;
-                padding-left: 10px;
-                font-style: italic;
+                color: #ff6b6b; background: rgba(255, 0, 0, 0.05);
+                border-left: 4px solid #ff6b6b; padding-left: 10px; font-style: italic;
             }
 
             /* --- 아이콘 버튼 (링크 복사, 텍스트 복사) 그룹 --- */
             .msg-actions {
-                position: absolute;
-                left: 5px;
-                top: 5px;
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                opacity: 0;
-                transition: all 0.2s;
-                z-index: 10;
+                position: absolute; left: 5px; top: 5px;
+                display: flex; flex-direction: column; gap: 4px;
+                opacity: 0; transition: all 0.2s; z-index: 10;
             }
-
-            .msg-group:hover .msg-actions {
-                opacity: 0.5;
-            }
-
+            .msg-group:hover .msg-actions { opacity: 0.5; }
             .msg-actions button {
-                background: transparent;
-                border: none;
-                padding: 4px;
-                border-radius: 4px;
-                cursor: pointer;
-                user-select: none;
-                -webkit-user-select: none;
-                pointer-events: none;
-                position: relative;
+                background: transparent; border: none; padding: 4px; border-radius: 4px;
+                cursor: pointer; user-select: none; pointer-events: none; position: relative;
             }
+            .msg-actions button svg { width: 16px; height: 16px; fill: var(--text-color); stroke: none; }
+            .msg-actions button:hover { background: var(--btn-hover); opacity: 1 !important; }
+            .msg-group:hover .msg-actions button { pointer-events: auto; }
 
-            .msg-actions button svg {
-                width: 16px;
-                height: 16px;
-                fill: var(--text-color);
-                stroke: none;
-            }
-
-            .msg-actions button:hover {
-                background: var(--btn-hover);
-                opacity: 1 !important;
-            }
-
-            .msg-group:hover .msg-actions button {
-                pointer-events: auto;
-            }
-
-            /* 툴팁 (말풍선) CSS */
             .msg-actions button::after {
-                content: attr(data-tooltip);
-                position: absolute;
-                left: 100%;
-                top: 50%;
-                transform: translateY(-50%);
-                margin-left: 8px;
-                background: var(--text-color);
-                color: var(--bg-color);
-                padding: 4px 8px;
-                border-radius: 4px;
-                font-size: 0.85em;
-                white-space: nowrap;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.2s, margin-left 0.2s;
-                font-weight: bold;
-                font-family: sans-serif;
+                content: attr(data-tooltip); position: absolute; left: 100%; top: 50%;
+                transform: translateY(-50%); margin-left: 8px; background: var(--text-color);
+                color: var(--bg-color); padding: 4px 8px; border-radius: 4px; font-size: 0.85em;
+                white-space: nowrap; opacity: 0; pointer-events: none;
+                transition: opacity 0.2s, margin-left 0.2s; font-weight: bold; font-family: sans-serif;
             }
+            .msg-actions button:hover::after { opacity: 1; margin-left: 12px; }
 
-            .msg-actions button:hover::after {
-                opacity: 1;
-                margin-left: 12px;
-            }
-
-            /* 범위 복사 시 선택된 블록 하이라이트 */
             .msg-group.selected-for-copy {
                 border-left: 4px solid var(--accent-color);
                 background: rgba(90, 159, 212, 0.05);
@@ -292,135 +192,76 @@
 
             /* --- 목차(ToC) 사이드바 --- */
             #toc-overlay {
-                position: fixed;
-                top: 0; left: 0; width: 100vw; height: 100vh;
-                background: rgba(0,0,0,0.4);
-                z-index: 1999;
-                display: none;
-                backdrop-filter: blur(2px);
+                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                background: rgba(0,0,0,0.4); z-index: 1999; display: none; backdrop-filter: blur(2px);
             }
-
             #toc-overlay.open { display: block; }
-
             #toc-sidebar {
-                position: fixed;
-                top: 0;
-                left: -320px;
-                width: 280px;
-                height: 100vh;
-                background: var(--panel-bg);
-                border-right: 1px solid var(--border-color);
-                transition: left 0.3s ease;
-                z-index: 2000;
-                overflow-y: hidden;
-                display: flex;
-                flex-direction: column;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.3);
-                box-sizing: border-box;
+                position: fixed; top: 0; left: -320px; width: 280px; height: 100vh;
+                background: var(--panel-bg); border-right: 1px solid var(--border-color);
+                transition: left 0.3s ease; z-index: 2000; overflow-y: hidden;
+                display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0,0,0,0.3); box-sizing: border-box;
             }
-
             #toc-sidebar.open { left: 0; }
-
-            #toc-header {
-                padding: 20px 20px 10px 20px;
-                border-bottom: 1px solid var(--border-color);
-            }
-
-            #toc-header h3 {
-                margin: 0 0 10px 0;
-                font-family: sans-serif;
-                color: var(--text-color);
-            }
-
-            #toc-search {
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            #toc-list-container {
-                flex: 1;
-                overflow-y: auto;
-                padding: 10px 20px 20px 20px;
-            }
-
-            #toc-list {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-                font-size: 0.95em;
-            }
-
+            #toc-header { padding: 20px 20px 10px 20px; border-bottom: 1px solid var(--border-color); }
+            #toc-header h3 { margin: 0 0 10px 0; font-family: sans-serif; color: var(--text-color); }
+            #toc-search { width: 100%; box-sizing: border-box; }
+            #toc-list-container { flex: 1; overflow-y: auto; padding: 10px 20px 20px 20px; }
+            #toc-list { list-style: none; padding: 0; margin: 0; font-size: 0.95em; }
             #toc-list li { margin: 8px 0; }
-
-            #toc-list a {
-                color: var(--text-color);
-                text-decoration: none;
-                opacity: 0.8;
-                transition: opacity 0.2s, color 0.2s;
-                display: block;
-            }
-
-            #toc-list a:hover {
-                opacity: 1;
-                color: var(--accent-color);
-            }
-
-            #toc-list ul {
-                list-style: none;
-                padding-left: 15px;
-                border-left: 1px solid var(--border-color);
-                margin-top: 5px;
-            }
+            #toc-list a { color: var(--text-color); text-decoration: none; opacity: 0.8; transition: opacity 0.2s, color 0.2s; display: block; }
+            #toc-list a:hover { opacity: 1; color: var(--accent-color); }
+            #toc-list ul { list-style: none; padding-left: 15px; border-left: 1px solid var(--border-color); margin-top: 5px; }
 
             /* --- 토스트 알림 --- */
             #toast {
-                position: fixed;
-                bottom: 30px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: var(--text-color);
-                color: var(--bg-color);
-                padding: 10px 20px;
-                border-radius: 30px;
-                font-size: 0.9em;
-                font-weight: bold;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                pointer-events: none;
-                z-index: 9999;
+                position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+                background: var(--text-color); color: var(--bg-color); padding: 10px 20px;
+                border-radius: 30px; font-size: 0.9em; font-weight: bold; opacity: 0;
+                transition: opacity 0.3s ease; pointer-events: none; z-index: 9999;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             }
 
             #top-btn {
-                position: fixed;
-                bottom: 25px;
-                right: 25px;
-                width: 45px;
-                height: 45px;
-                border-radius: 50%;
-                font-size: 1.2em;
-                display: none;
-                z-index: 1000;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                position: fixed; bottom: 25px; right: 25px; width: 45px; height: 45px;
+                border-radius: 50%; font-size: 1.2em; display: none; z-index: 1000;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;
             }
 
             pre.loading { font-family: "Deltarune Font", Monospace; padding: 20px; }
-            div.indented { margin: 0; padding-left: 16px; text-indent: -16px; }
 
+            /* --- 인게임 컬러 --- */
             span.R { color: #ff5555; } span.B { color: #5555ff; } span.Y { color: #ffff55; }
             span.G { color: #55ff55; } span.O { color: #ffaa55; } span.A { color: #55ffff; }
             span.S { color: #ff55ff; } span.V { color: #aaffaa; } span.I { color: #aaccff; }
+            span.p { color: rgb(255, 138, 144); } span.s { color: #e2a8fc; }
+            span.a { color: #84f9ff; } span.y { color: #fff8a1; } span.g { color: #aeffbc; }
+            span.o { color: #ffac87; } span.b { color: #86a7ff; }
 
+            /* 라이트모드 텍스트 가독성 확보용 테두리 처리 */
             body.light span.Y, body.light span.G, body.light span.A, body.light span.V, body.light span.S, body.light span.I {
-                -webkit-text-stroke: 1px var(--text-color);
-                paint-order: stroke fill;
+                -webkit-text-stroke: 1px var(--text-color); paint-order: stroke fill;
             }
-            span.picture, span.param { background: var(--text-color); color: var(--bg-color); }
+
+            /* --- 특수 연출 (음성, 얼굴 아이콘) CSS --- */
+            .voiced {
+                padding-left: 24px; position: relative;
+            }
+            .voiced:before {
+                content: "🔊"; position: absolute; left: 0; top: 0;
+                font-size: 14px; opacity: 0.7; cursor: pointer;
+            }
+            body.light .voiced:before { opacity: 0.9; }
+            [data-sound] { cursor: pointer; }
+            
+            img.miniface {
+                width: 20px; height: 20px; vertical-align: bottom;
+                margin-right: 5px; image-rendering: pixelated;
+            }
         </style>
     </head>
 
     <body>
-        <!-- 사이드바 & 오버레이 & 토스트 알림 -->
         <div id="toc-overlay"></div>
         <div id="toc-sidebar">
             <div id="toc-header">
@@ -455,6 +296,7 @@
                             <option value="2">Chapter 2</option>
                             <option value="3">Chapter 3</option>
                             <option value="4">Chapter 4</option>
+                            <option value="5">Chapter 5</option>
                         </select>
                     </div>
 
@@ -484,14 +326,6 @@
                             <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                         </button>
                     </div>
-                    <button type="button" id="github-link" title="Visit GitHub Repository" 
-                        onclick="window.location.href='https://github.com/newhajinyoon/deltarune-multilingual-text-dump'"
-                        style="font-weight:bold; cursor:pointer; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid #30363d; border-radius: 6px; background-color: #21262d; color: #c9d1d9;">
-                        <svg height="20" viewBox="0 0 16 16" width="20" aria-hidden="true" fill="currentColor">
-                            <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
-                        </svg>
-                        GitHub
-                    </button>
                 </div>
 
                 <div id="txt-downloads" style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.9em; margin-top:5px;"></div>
@@ -506,8 +340,13 @@
             <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
         </button>
 
-        <script>
-            "use strict";
+        <!-- 모듈을 사용하여 data.json.js 연동 및 렌더링 스크립트 실행 -->
+        <script type="module">
+            import * as DRData from './data.json.js';
+
+            // 인라인 핸들러 사용을 위한 전역 함수 등록
+            window.copyDeepLink = copyDeepLink;
+            window.copyBlockText = copyBlockText;
 
             const langsAvailable = window.availableLangs || ["en", "ja"];
             const text = window.rendered;
@@ -517,23 +356,16 @@
             const langElems = {};
             
             const displayNames = {
-                de: "Deutsch",
-                en: "English",
-                es: "Español",
-                ja: "日本語",
-                ko: "한국어",
-                pl: "Polski",
-                "pt-BR": "Português",
-                ru: "Русский",
-                zh: "中文"
+                de: "Deutsch", fr: "Français", en: "English", es: "Español",
+                ja: "日本語", ko: "한국어", pl: "Polski", "pt-BR": "Português",
+                ru: "Русский", zh: "中文"
             };
 
             const langFrag = document.createDocumentFragment();
             langsAvailable.forEach(l => {
                 const label = document.createElement("label");
                 const checkbox = document.createElement("input");
-                checkbox.type = "checkbox"; 
-                checkbox.value = l;
+                checkbox.type = "checkbox"; checkbox.value = l;
                 
                 label.appendChild(checkbox);
                 label.appendChild(document.createTextNode(" " + (displayNames[l] || l.toUpperCase())));
@@ -542,15 +374,10 @@
                 checkbox.addEventListener('change', updateLangUrlAndRender);
 
                 const a = document.createElement("a");
-                a.href = `DELTARUNE_${l}.txt`; 
-                a.target = "_blank";
-                a.style.color = "var(--text-color)";
-                a.style.textDecoration = "none";
-                a.style.display = "flex";
-                a.style.alignItems = "center";
-                a.style.gap = "4px";
+                a.href = `txt/DELTARUNE_${l}.txt`; a.target = "_blank";
+                a.style.color = "var(--text-color)"; a.style.textDecoration = "none";
+                a.style.display = "flex"; a.style.alignItems = "center"; a.style.gap = "4px";
                 a.innerHTML = `<svg style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg> ${displayNames[l] || l.toUpperCase()}`;
-                
                 txtDownloads.appendChild(a);
             });
             langControls.appendChild(langFrag);
@@ -581,7 +408,6 @@
             const viewToggleBtn = document.getElementById("view-toggle");
             
             if(localStorage.getItem("drGridView") === "true") toggleGridView(true);
-
             viewToggleBtn.addEventListener("click", () => toggleGridView());
             
             function toggleGridView(force) {
@@ -653,28 +479,22 @@
                 
                 let regex = null;
                 if (useRegex && searchTerm) {
-                    try { regex = new RegExp(searchTerm, 'i'); } 
-                    catch(e) { regex = null; }
+                    try { regex = new RegExp(searchTerm, 'i'); } catch(e) { regex = null; }
                 }
 
                 const container = document.getElementById("render-content");
                 if (!container) return;
 
-                let currentH1 = null;
-                let currentH2 = null;
+                let currentH1 = null; let currentH2 = null;
                 const visibility = new Map();
-
                 const elements = container.children;
                 
                 for (let i = 0; i < elements.length; i++) {
                     const el = elements[i];
-                    
                     if (el.tagName === 'H1') {
-                        currentH1 = el;
-                        visibility.set(currentH1, false);
+                        currentH1 = el; visibility.set(currentH1, false);
                     } else if (el.tagName === 'H2') {
-                        currentH2 = el;
-                        visibility.set(currentH2, false);
+                        currentH2 = el; visibility.set(currentH2, false);
                     } else if (el.classList.contains('msg-group')) {
                         let isMatch = true;
                         const plainText = el.getAttribute('data-text');
@@ -683,29 +503,77 @@
                             if (regex) isMatch = regex.test(plainText);
                             else isMatch = plainText.includes(searchTerm);
                         }
-
                         el.style.display = isMatch ? "" : "none";
-
                         if (isMatch) {
                             if (currentH1) visibility.set(currentH1, true);
                             if (currentH2) visibility.set(currentH2, true);
                         }
                     }
                 }
-
                 for (let i = 0; i < elements.length; i++) {
                     const el = elements[i];
                     if (el.tagName === 'H1' || el.tagName === 'H2') {
-                        if (!searchTerm) {
-                            el.style.display = ""; 
-                        } else {
-                            el.style.display = visibility.get(el) ? "" : "none";
-                        }
+                        el.style.display = (!searchTerm || visibility.get(el)) ? "" : "none";
                     }
                 }
             }
 
-            // 아이콘 SVG 문자열 선언
+            // === 텍스트 파서 함수 (HushBugger 로직 연동) ===
+            function parseDeltaruneText(text, msgId, chap, lang) {
+                if (!text) return "";
+                let isVoiced = false;
+                let voiceSound = null;
+
+                // 1. 개행 기호(&, #)를 실제 줄바꿈으로 변경
+                text = text.replace(/[&#]/g, "\n");
+
+                // 2. 보이스 클립 재생 (\V)
+                text = text.replace(/\\V([a-zA-Z0-9])/g, (match, letter) => {
+                    // 💡 핵심: HushBugger 코드는 en, ja만 지원하므로 그 외 언어는 en으로 폴백(Fallback) 처리
+                    const audioLang = (lang === "ja") ? "ja" : "en";
+                    const [sndName] = DRData.lookup_voiceclip(letter, msgId, audioLang);
+                    
+                    if (sndName) voiceSound = sndName;
+                    isVoiced = true;
+                    return ""; // 기호는 숨김
+                });
+
+                // 3. 인게임 색상 적용 (\c)
+                let colorOpen = false;
+                text = text.replace(/\\c([A-Za-z0])/g, (match, colorCode) => {
+                    let res = colorOpen ? "</span>" : "";
+                    if (colorCode !== '0') {
+                        res += `<span class="${colorCode}">`;
+                        colorOpen = true;
+                    } else {
+                        colorOpen = false;
+                    }
+                    return res;
+                });
+                if (colorOpen) text += "</span>";
+
+                // 4. 미니페이스 얼굴 아이콘 렌더링 (\m)
+                text = text.replace(/\\m([0-9])/g, (match, faceId) => {
+                    try {
+                        let kind = DRData.minifacekind(msgId, chap);
+                        let sprite = DRData.minifacesprite(kind, faceId);
+                        if (sprite) return `<img class="miniface ${kind}" src="static/img/${sprite}.png" alt="face">`;
+                    } catch(e) {}
+                    return "";
+                });
+
+                // 5. 불필요한 제어 문자들 찌꺼기 제거
+                text = text.replace(/\\[METFSaOf][a-zA-Z0-9~]/g, "");
+                text = text.replace(/\\C([0-9])/g, ""); 
+                text = text.replace(/\^([0-9])/g, "");  
+
+                // 6. 보이스 태그 감싸기 (💡 data-lang 속성을 추가해서 언어 정보 저장!)
+                if (isVoiced && voiceSound) {
+                    return `<div class="voiced" data-sound="${voiceSound}" data-lang="${lang}">${text}</div>`;
+                }
+                return text;
+            }
+
             const linkIcon = `<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
             const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
 
@@ -716,10 +584,7 @@
                 if (!text) return;
                 
                 const thisRender = `${config.chap}:${config.langs.join('+')}`;
-                if (thisRender === curRendered) {
-                    applyFilters();
-                    return;
-                }
+                if (thisRender === curRendered) { applyFilters(); return; }
 
                 renderStateId++;
                 const currentRenderId = renderStateId;
@@ -741,13 +606,12 @@
                 const loadingContainer = document.getElementById("loading-container");
 
                 const tasks = [];
-                for (let chap = 1; chap <= 4; chap++) {
+                for (let chap = 1; chap <= 5; chap++) {
                     if (config.chap !== String(chap) && config.chap !== "all") continue;
                     const chapterData = text[chap];
                     if (!chapterData) continue;
 
                     tasks.push({ isChap: true, chap });
-
                     for (const groupName in chapterData) {
                         tasks.push({ isChap: false, chap, groupName, groupData: chapterData[groupName] });
                     }
@@ -757,17 +621,18 @@
                 let currentIdx = 0;
                 const chunkSize = 20; 
 
+                // 배열을 이용한 문자열 접합 최적화
                 function processNextChunk() {
                     if (currentRenderId !== renderStateId) return;
 
-                    let htmlBuffer = "";
+                    const htmlBuffer = [];
                     const endIdx = Math.min(currentIdx + chunkSize, totalTasks);
 
                     for (; currentIdx < endIdx; currentIdx++) {
                         const task = tasks[currentIdx];
 
                         if (task.isChap) {
-                            htmlBuffer += `<h1 id="${task.chap}"><a href="#${task.chap}">Chapter ${task.chap}</a></h1>`;
+                            htmlBuffer.push(`<h1 id="${task.chap}"><a href="#${task.chap}">Chapter ${task.chap}</a></h1>`);
                         } else {
                             let titleAdded = false;
                             for (const msgId in task.groupData) {
@@ -785,6 +650,12 @@
                                         className += " untranslated";
                                         msg = `[ NULL ]`;
                                     } else {
+                                        // 파서 함수 적용 (음성, 색상, 아이콘 연출 렌더링)
+                                        // data.json.js가 인식할 수 있도록 잘려나갔던 원본 키를 다시 조립해줌
+                                        const fullMsgId = task.groupName + "_slash_" + msgId;
+
+                                        // msgId 대신 fullMsgId를 넘겨줌!
+                                        msg = parseDeltaruneText(msg, fullMsgId, String(task.chap), lang);
                                         combinedTextForSearch += msg.replace(/<[^>]*>?/gm, '').toLowerCase() + " ";
                                     }
 
@@ -794,12 +665,11 @@
                                 if (groupContent !== "") {
                                     if (!titleAdded) {
                                         const finalH2Text = task.groupName.replace(/_slash_/g, "/").replace(/_/g, '<span class="breakable">_</span>');
-                                        htmlBuffer += `<h2 id="${task.chap}_${task.groupName}"><a href="#${task.chap}_${task.groupName}">${finalH2Text}</a></h2>`;
+                                        htmlBuffer.push(`<h2 id="${task.chap}_${task.groupName}"><a href="#${task.chap}_${task.groupName}">${finalH2Text}</a></h2>`);
                                         titleAdded = true;
                                     }
 
-                                    // 툴팁 안내가 들어간 복사 버튼 렌더링
-                                    htmlBuffer += `
+                                    htmlBuffer.push(`
                                         <div class="msg-group" id="msg-${msgId}" data-text="${combinedTextForSearch.replace(/"/g, '&quot;')}">
                                             <div class="msg-actions">
                                                 <button onclick="copyDeepLink('${msgId}')" data-tooltip="링크 복사">${linkIcon}</button>
@@ -807,18 +677,16 @@
                                             </div>
                                             ${groupContent}
                                         </div>
-                                    `;
+                                    `);
                                 }
                             }
                         }
                     }
 
-                    if (htmlBuffer) {
+                    if (htmlBuffer.length > 0) {
                         const tempDiv = document.createElement("div");
-                        tempDiv.innerHTML = htmlBuffer;
-                        while (tempDiv.firstChild) {
-                            renderContent.appendChild(tempDiv.firstChild);
-                        }
+                        tempDiv.innerHTML = htmlBuffer.join("");
+                        while (tempDiv.firstChild) renderContent.appendChild(tempDiv.firstChild);
                     }
 
                     const progress = Math.floor((currentIdx / totalTasks) * 100);
@@ -831,7 +699,7 @@
                         loadingContainer.style.display = "none";
                         curRendered = thisRender;
                         applyFilters();
-                        buildToC(); // 목차 생성
+                        buildToC();
                         
                         setTimeout(() => {
                             if(window.location.hash) {
@@ -841,7 +709,6 @@
                         }, 100);
                     }
                 }
-
                 requestAnimationFrame(processNextChunk);
             }
 
@@ -853,38 +720,27 @@
                 render();
             });
 
-            /* =======================================
-                추가 기능: 토스트 알림, 목차, 텍스트 복사
-            ======================================= */
-
             let toastTimeout;
             function showToast(message) {
                 const toast = document.getElementById("toast");
-                toast.innerText = message;
-                toast.style.opacity = "1";
+                toast.innerText = message; toast.style.opacity = "1";
                 clearTimeout(toastTimeout);
                 toastTimeout = setTimeout(() => { toast.style.opacity = "0"; }, 2500);
             }
 
-            // 목차(ToC) 사이드바 열기/닫기
             const tocSidebar = document.getElementById("toc-sidebar");
             const tocOverlay = document.getElementById("toc-overlay");
 
             document.getElementById("toc-toggle-btn").addEventListener("click", () => {
-                tocSidebar.classList.add("open");
-                tocOverlay.classList.add("open");
+                tocSidebar.classList.add("open"); tocOverlay.classList.add("open");
             });
-
             tocOverlay.addEventListener("click", () => {
-                tocSidebar.classList.remove("open");
-                tocOverlay.classList.remove("open");
+                tocSidebar.classList.remove("open"); tocOverlay.classList.remove("open");
             });
 
-            // 목차 검색 기능
             document.getElementById("toc-search").addEventListener("input", (e) => {
                 const term = e.target.value.toLowerCase();
                 const tocList = document.getElementById("toc-list");
-                
                 Array.from(tocList.children).forEach(h1Li => {
                     const h1A = h1Li.querySelector("a");
                     const ul = h1Li.querySelector("ul");
@@ -895,55 +751,44 @@
                         Array.from(ul.children).forEach(h2Li => {
                             const h2A = h2Li.querySelector("a");
                             if (h1Match || h2A.innerText.toLowerCase().includes(term)) {
-                                h2Li.style.display = "";
-                                anyH2Match = true;
-                            } else {
-                                h2Li.style.display = "none";
-                            }
+                                h2Li.style.display = ""; anyH2Match = true;
+                            } else h2Li.style.display = "none";
                         });
                     }
-
-                    if (h1Match || anyH2Match) {
-                        h1Li.style.display = "";
-                    } else {
-                        h1Li.style.display = "none";
-                    }
+                    h1Li.style.display = (h1Match || anyH2Match) ? "" : "none";
                 });
             });
 
             function buildToC() {
                 const container = document.getElementById("render-content");
                 const tocList = document.getElementById("toc-list");
-                let html = "";
+                const htmlBuffer = [];
                 let inChap = false;
 
                 for (let i = 0; i < container.children.length; i++) {
                     const el = container.children[i];
                     if (el.tagName === 'H1') {
-                        if (inChap) html += `</ul></li>`;
-                        html += `<li><a href="#${el.id}" style="font-weight:bold;">${el.innerText}</a><ul>`;
+                        if (inChap) htmlBuffer.push(`</ul></li>`);
+                        htmlBuffer.push(`<li><a href="#${el.id}" style="font-weight:bold;">${el.innerText}</a><ul>`);
                         inChap = true;
                     } else if (el.tagName === 'H2') {
-                        html += `<li><a href="#${el.id}">${el.innerText}</a></li>`;
+                        htmlBuffer.push(`<li><a href="#${el.id}">${el.innerText}</a></li>`);
                     }
                 }
-                if (inChap) html += `</ul></li>`;
-                tocList.innerHTML = html;
+                if (inChap) htmlBuffer.push(`</ul></li>`);
+                tocList.innerHTML = htmlBuffer.join("");
 
                 tocList.querySelectorAll("a").forEach(a => {
                     a.addEventListener("click", () => {
-                        tocSidebar.classList.remove("open");
-                        tocOverlay.classList.remove("open");
+                        tocSidebar.classList.remove("open"); tocOverlay.classList.remove("open");
                     });
                 });
             }
 
-            // 텍스트 복사 & 범위 복사 로직 (Shift + Click)
             let firstSelectedBlock = null;
 
             function copyBlockText(event, msgId) {
                 const currentBlock = document.getElementById(`msg-${msgId}`);
-
                 if (event.shiftKey) {
                     if (!firstSelectedBlock) {
                         firstSelectedBlock = currentBlock;
@@ -957,12 +802,10 @@
                         return;
                     }
                 }
-
                 if (firstSelectedBlock) {
                     firstSelectedBlock.classList.remove("selected-for-copy");
                     firstSelectedBlock = null;
                 }
-                
                 navigator.clipboard.writeText(extractText(currentBlock));
                 showToast("번역 텍스트가 복사되었습니다.");
             }
@@ -971,8 +814,6 @@
                 let res = [];
                 block.querySelectorAll('.textbox').forEach(box => {
                     const lang = box.getAttribute('lang').toUpperCase();
-                    // 브라우저 렌더링 최적화(content-visibility) 때문에 안 보이는 요소의 innerText가 
-                    // 비어버리는 버그 해결을 위해 textContent 사용
                     const text = box.textContent; 
                     res.push(`[${lang}] ${text}`);
                 });
@@ -983,27 +824,58 @@
                 const allBlocks = Array.from(document.querySelectorAll('.msg-group'));
                 const idx1 = allBlocks.indexOf(startBlock);
                 const idx2 = allBlocks.indexOf(endBlock);
-                
                 if (idx1 === -1 || idx2 === -1) return;
 
                 const startIdx = Math.min(idx1, idx2);
                 const endIdx = Math.max(idx1, idx2);
-
-                let res = [];
-                let count = 0;
+                let res = []; let count = 0;
 
                 for (let i = startIdx; i <= endIdx; i++) {
                     const block = allBlocks[i];
                     if (block.style.display !== "none") {
-                        res.push(extractText(block));
-                        res.push("-----------------------");
-                        count++;
+                        res.push(extractText(block)); res.push("-----------------------"); count++;
                     }
                 }
-
                 navigator.clipboard.writeText(res.join('\n'));
                 showToast(`${count}개 블록이 일괄 복사되었습니다.`);
             }
+
+            // ===============================================
+            // 오디오 클릭 시 재생 이벤트 리스너 (다국어 더빙 + 자동 폴백 지원)
+            // ===============================================
+            let currentAudio = null;
+            document.addEventListener("click", function (event) {
+                const soundElem = event.target.closest(".voiced");
+                if (!soundElem || !soundElem.dataset.sound) return;
+
+                let soundName = soundElem.dataset.sound;
+                let lang = soundElem.dataset.lang; // 어느 언어 대사인지 가져옴
+                
+                if (currentAudio) {
+                    currentAudio.pause();
+                }
+                
+                // HTML5 <audio> 요소 생성
+                currentAudio = document.createElement("audio");
+
+                // 1순위: 선택한 언어의 더빙 파일 찾기
+                if (lang === "ko") {
+                    // 한국어는 파일 끝에 _ko.wav 또는 _kr.wav가 붙어 있으므로 둘 다 시도
+                    currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/ko/${soundName}_ko.wav`}));
+                    currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/ko/${soundName}_kr.wav`}));
+                } else if (lang === "es") {
+                    currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/es/${soundName}.ogg`}));
+                } else if (lang === "ru") {
+                    currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/ru/${soundName}.ogg`}));
+                }
+
+                // 2순위: 1순위 파일이 없거나(예: 펀텍스트 효과음) en, ja일 경우 원본(기본값) 재생
+                currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/${soundName}.mp3`}));
+                currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/${soundName}.opus`}));
+
+                // 재생 시작
+                currentAudio.play().catch(e => console.log("Audio playback failed: ", e));
+            });
         </script>
     </body>
 </html>
