@@ -1,881 +1,710 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Deltarune Text Dump</title>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deltarune Text Dump</title>
+    
+    <link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgBAMAAACBVGfHAAAAD1BMVEUAAADAgiYAAACFSh3AgibGPmPhAAAAAnRSTlMAAHaTzTgAAACXSURBVCiRhZHLDYRADEN9oISt4I0rQBQAGfdf0x6AhVntxzc/OXGkSH/1yKBNDwZtqhH4E5gv27CK5Eg5OUAfQXN2kJr3pUnRZpwcLUt6S+Yl/axt5aTcb3f4rPoKSH6c/g90gAIwwKIJICQEYNUEOLhIAatU4JTLKbC0z+B9+Srp3mPpFbkCUk6f81l58we5eSnJ4H/pCVYTQjf3DYm9AAAAAElFTkSuQmCC" />
+    <script src="rendered.json.js"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'Deltarune Font';
+            src: url('static/gulim-13px.ttf') format('truetype');
+            font-weight: normal; font-display: swap;
+        }
+        :root {
+            --base-font-size: 16px;
+            --bg-color: #121212; --text-color: #e0e0e0;
+            --panel-bg: #1e1e1e; --btn-bg: #2d2d2d;
+            --btn-hover: #3d3d3d; --border-color: #404040;
+            --accent-color: #5a9fd4; --copy-color: #4caf50;
+        }
+        body.light {
+            --bg-color: #fdfdfd; --text-color: #1a1a1a;
+            --panel-bg: #f0f0f0; --btn-bg: #e0e0e0;
+            --btn-hover: #d0d0d0; --border-color: #cccccc;
+            --accent-color: #005bb5; --copy-color: #2e7d32;
+        }
+        body {
+            background: var(--bg-color); color: var(--text-color);
+            font-family: sans-serif; margin: 0; line-height: 1.4em;
+            overflow-wrap: break-word; font-size: var(--base-font-size);
+        }
+
+        .intro { background: var(--panel-bg); padding: 15px 20px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        button, select, input[type="text"] {
+            background: var(--btn-bg); color: var(--text-color);
+            border: 1px solid var(--border-color); padding: 8px 12px;
+            border-radius: 6px; font-size: 0.95em; cursor: pointer;
+            transition: all 0.2s ease; outline: none;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        button:hover, select:hover { background: var(--btn-hover); border-color: var(--accent-color); }
+        input[type="text"]:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(90, 159, 212, 0.2); }
+        svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9em; }
         
-        <link
-            rel="shortcut icon"
-            type="image/png"
-            href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgBAMAAACB
-            VGfHAAAAD1BMVEUAAADAgiYAAACFSh3AgibGPmPhAAAAAnRSTlMAAHaTzTgAAACXSURB
-            VCiRhZHLDYRADEN9oISt4I0rQBQAGfdf0x6AhVntxzc/OXGkSH/1yKBNDwZtqhH4E5gv
-            27CK5Eg5OUAfQXN2kJr3pUnRZpwcLUt6S+Yl/axt5aTcb3f4rPoKSH6c/g90gAIwwKIJ
-            ICQEYNUEOLhIAatU4JTLKbC0z+B9+Srp3mPpFbkCUk6f81l58we5eSnJ4H/pCVYTQjf3
-            DYm9AAAAAElFTkSuQmCC"
-        />
+        .menu-toggle { display: none; width: 100%; padding: 12px; font-weight: bold; }
+        .controls-wrapper { display: flex; flex-direction: column; gap: 12px; }
+        .control-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .control-group { display: flex; gap: 8px; align-items: center; background: rgba(0, 0, 0, 0.1); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .search-wrapper { position: relative; display: flex; align-items: center; }
+        .search-wrapper svg { position: absolute; left: 10px; width: 16px; height: 16px; opacity: 0.6; }
+        .search-wrapper input { padding-left: 32px; width: 220px; }
+        #search-count { font-size: 0.85em; opacity: 0.8; font-weight: bold; margin-left: 5px; color: var(--accent-color); }
+
+        @media (max-width: 768px) {
+            .menu-toggle { display: flex; }
+            .controls-wrapper { display: none; padding-top: 15px; }
+            .controls-wrapper.open { display: flex; }
+            .control-row, .control-group { flex-direction: column; align-items: stretch; }
+            .search-wrapper input { width: 100%; }
+        }
+
+        h1 { font-family: "Deltarune Font", Monospace; padding-left: 20px; margin: 30px 0 15px; font-size: 2em; }
+        h2 { font-family: "Deltarune Font", Monospace; padding-left: 20px; margin: 30px 0 15px; font-size: 1.4em; border-bottom: 2px solid var(--border-color); padding-bottom: 5px; display: inline-flex; align-items: center; max-width: 100%; flex-wrap: wrap; }
+        h1 a, h2 a { color: var(--text-color); text-decoration: none; }
+        .breakable { word-break: break-all; }
+        mark { background-color: rgba(255, 235, 59, 0.4); color: inherit; border-radius: 2px; padding: 0 2px; }
+
+        .jump-context-btn {
+            display: none; background: var(--accent-color); color: #fff; border: none; padding: 4px 10px; border-radius: 20px; font-size: 0.6em; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-left: 10px;
+        }
+        .jump-context-btn svg { width: 14px; height: 14px; stroke: #fff; }
+        h2:hover .jump-context-btn { display: inline-flex; align-items: center; gap: 5px; }
+        .jump-context-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
+
+        .render-chunk { content-visibility: auto; contain-intrinsic-size: auto 1500px; }
         
-        <!-- 전역 텍스트 데이터 로드 -->
-        <script src="rendered.json.js"></script>
+        .msg-group {
+            position: relative; padding-left: 45px; margin-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color); padding-bottom: 15px;
+            transition: background 0.3s, border-color 0.3s; border-left: 4px solid transparent;
+        }
+        #textboxes.grid-view .msg-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .textbox { white-space: pre-wrap; padding: 5px 0; font-family: "Deltarune Font", Monospace; }
+        .untranslated { color: #ff6b6b; background: rgba(255, 0, 0, 0.05); border-left: 4px solid #ff6b6b; padding-left: 10px; font-style: italic; }
+
+        .msg-actions { position: absolute; left: 5px; top: 5px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
+        .msg-actions button { background: transparent; border: 1px solid transparent; padding: 5px; border-radius: 4px; cursor: pointer; opacity: 0.3; }
+        .msg-actions button svg { width: 18px; height: 18px; fill: var(--text-color); stroke: none; }
+        .msg-group:hover .msg-actions button { opacity: 0.8; }
+        .msg-actions button:hover { background: var(--btn-hover); opacity: 1 !important; border-color: var(--border-color); }
+        .msg-actions button.copy-btn svg { fill: none; stroke: currentColor; }
         
-        <style>
-            @font-face {
-                font-family: 'Deltarune Font';
-                src: url('static/gulim-13px.ttf') format('truetype');
-                font-weight: normal;
-                font-display: swap;
-            }
+        .msg-actions button::after {
+            content: attr(data-tooltip); position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+            margin-left: 8px; background: var(--text-color); color: var(--bg-color); padding: 5px 10px;
+            border-radius: 6px; font-size: 0.85em; white-space: nowrap; opacity: 0; pointer-events: none;
+            transition: opacity 0.2s, margin-left 0.2s; font-weight: bold; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .msg-actions button:hover::after { opacity: 1; margin-left: 12px; }
 
-            :root {
-                --base-font-size: 16px;
-                --bg-color: #121212;
-                --text-color: #e0e0e0;
-                --panel-bg: #1e1e1e;
-                --btn-bg: #2d2d2d;
-                --btn-hover: #3d3d3d;
-                --border-color: #404040;
-                --accent-color: #5a9fd4;
-            }
+        .msg-group.copied { background: rgba(76, 175, 80, 0.15); border-left-color: var(--copy-color); }
+        .msg-group.copy-range-start { border-left-color: var(--accent-color); background: rgba(90, 159, 212, 0.08); }
 
-            body.light {
-                --bg-color: #fdfdfd;
-                --text-color: #1a1a1a;
-                --panel-bg: #f0f0f0;
-                --btn-bg: #e0e0e0;
-                --btn-hover: #d0d0d0;
-                --border-color: #cccccc;
-                --accent-color: #005bb5;
-            }
+        #toc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
+        #toc-overlay.open { display: block; }
+        #toc-sidebar {
+            position: fixed; top: 0; left: -320px; width: 300px; height: 100vh;
+            background: var(--panel-bg); border-right: 1px solid var(--border-color);
+            transition: left 0.3s ease; z-index: 2000; overflow-y: hidden;
+            display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.4); box-sizing: border-box;
+        }
+        #toc-sidebar.open { left: 0; }
+        #toc-header { padding: 20px; border-bottom: 1px solid var(--border-color); }
+        #toc-header h3 { margin: 0 0 12px 0; color: var(--text-color); }
+        #toc-search { width: 100%; box-sizing: border-box; }
+        #toc-list-container { flex: 1; overflow-y: auto; padding: 10px 20px 20px; }
+        #toc-list { list-style: none; padding: 0; margin: 0; font-size: 0.95em; }
+        #toc-list li { margin: 10px 0; }
+        #toc-list a { color: var(--text-color); text-decoration: none; opacity: 0.8; transition: all 0.2s; display: block; padding: 4px; border-radius: 4px; }
+        #toc-list a:hover { opacity: 1; color: var(--accent-color); background: rgba(90, 159, 212, 0.1); }
+        #toc-list ul { list-style: none; padding-left: 15px; border-left: 1px solid var(--border-color); margin-top: 5px; }
 
-            body {
-                background: var(--bg-color);
-                color: var(--text-color);
-                font-family: sans-serif;
-                margin: 0;
-                line-height: 1.3em;
-                overflow-wrap: break-word;
-                font-size: var(--base-font-size);
-            }
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--text-color); color: var(--bg-color); padding: 12px 24px;
+            border-radius: 30px; font-size: 0.95em; font-weight: bold; opacity: 0;
+            transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); pointer-events: none; z-index: 9999; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 80%;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast span { display: block; font-size: 0.8em; font-weight: normal; margin-top: 4px; opacity: 0.8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 300px; }
 
-            div.intro {
-                background: var(--panel-bg);
-                padding: 15px 20px;
-                border-bottom: 1px solid var(--border-color);
-            }
+        #top-btn {
+            position: fixed; bottom: 25px; right: 25px; width: 45px; height: 45px; border-radius: 50%;
+            font-size: 1.2em; display: none; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .loading { font-family: "Deltarune Font", Monospace; padding: 40px; text-align: center; font-size: 1.2em; }
 
-            button, select, input[type="text"] {
-                background: var(--btn-bg);
-                color: var(--text-color);
-                border: 1px solid var(--border-color);
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 0.95em;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                outline: none;
-                font-family: sans-serif;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-            }
-
-            button:hover, select:hover {
-                background: var(--btn-hover);
-                border-color: var(--accent-color);
-            }
-
-            input[type="text"]:focus {
-                border-color: var(--accent-color);
-                box-shadow: 0 0 0 2px rgba(90, 159, 212, 0.2);
-            }
-
-            svg {
-                width: 18px;
-                height: 18px;
-                stroke: currentColor;
-                fill: none;
-                stroke-width: 2;
-                stroke-linecap: round;
-                stroke-linejoin: round;
-            }
-
-            label {
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                cursor: pointer;
-                font-size: 0.9em;
-            }
-
-            .menu-toggle { display: none; width: 100%; padding: 12px; font-weight: bold; }
-            .controls-wrapper { display: flex; flex-direction: column; gap: 12px; }
-            .control-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-            .control-group {
-                display: flex; gap: 8px; align-items: center;
-                background: rgba(0, 0, 0, 0.1); padding: 6px 10px;
-                border-radius: 8px; border: 1px solid var(--border-color);
-            }
-
-            .search-wrapper { position: relative; display: flex; align-items: center; }
-            .search-wrapper svg { position: absolute; left: 10px; width: 16px; height: 16px; opacity: 0.6; }
-            .search-wrapper input { padding-left: 32px; width: 200px; }
-
-            @media (max-width: 768px) {
-                .menu-toggle { display: flex; }
-                .controls-wrapper { display: none; padding-top: 15px; }
-                .controls-wrapper.open { display: flex; }
-                .control-row, .control-group { flex-direction: column; align-items: stretch; }
-                .search-wrapper input { width: 100%; }
-            }
-
-            h1, h2 {
-                font-size: 2em; line-height: 1em; font-weight: normal;
-                padding-left: 20px; margin-top: 30px; margin-bottom: 15px;
-                font-family: "Deltarune Font", Monospace;
-            }
-
-            h1 a, h2 a { color: var(--text-color); text-decoration: none; }
-            span.breakable { word-break: break-all; }
-
-            /* 렌더링 최적화 (content-visibility 적용) */
-            .msg-group {
-                position: relative; padding-left: 40px; margin-bottom: 12px;
-                border-bottom: 1px dashed var(--border-color); padding-bottom: 12px;
-                content-visibility: auto; contain-intrinsic-size: auto 40px;
-                transition: background 0.2s, border-color 0.2s;
-            }
-
-            #textboxes.grid-view .msg-group {
-                display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;
-            }
-
-            div.textbox {
-                white-space: pre-wrap; padding: 5px 0;
-                font-family: "Deltarune Font", Monospace;
-            }
-
-            div.untranslated {
-                color: #ff6b6b; background: rgba(255, 0, 0, 0.05);
-                border-left: 4px solid #ff6b6b; padding-left: 10px; font-style: italic;
-            }
-
-            /* --- 아이콘 버튼 (링크 복사, 텍스트 복사) 그룹 --- */
-            .msg-actions {
-                position: absolute; left: 5px; top: 5px;
-                display: flex; flex-direction: column; gap: 4px;
-                opacity: 0; transition: all 0.2s; z-index: 10;
-            }
-            .msg-group:hover .msg-actions { opacity: 0.5; }
-            .msg-actions button {
-                background: transparent; border: none; padding: 4px; border-radius: 4px;
-                cursor: pointer; user-select: none; pointer-events: none; position: relative;
-            }
-            .msg-actions button svg { width: 16px; height: 16px; fill: var(--text-color); stroke: none; }
-            .msg-actions button:hover { background: var(--btn-hover); opacity: 1 !important; }
-            .msg-group:hover .msg-actions button { pointer-events: auto; }
-
-            .msg-actions button::after {
-                content: attr(data-tooltip); position: absolute; left: 100%; top: 50%;
-                transform: translateY(-50%); margin-left: 8px; background: var(--text-color);
-                color: var(--bg-color); padding: 4px 8px; border-radius: 4px; font-size: 0.85em;
-                white-space: nowrap; opacity: 0; pointer-events: none;
-                transition: opacity 0.2s, margin-left 0.2s; font-weight: bold; font-family: sans-serif;
-            }
-            .msg-actions button:hover::after { opacity: 1; margin-left: 12px; }
-
-            .msg-group.selected-for-copy {
-                border-left: 4px solid var(--accent-color);
-                background: rgba(90, 159, 212, 0.05);
-            }
-
-            /* --- 목차(ToC) 사이드바 --- */
-            #toc-overlay {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-                background: rgba(0,0,0,0.4); z-index: 1999; display: none; backdrop-filter: blur(2px);
-            }
-            #toc-overlay.open { display: block; }
-            #toc-sidebar {
-                position: fixed; top: 0; left: -320px; width: 280px; height: 100vh;
-                background: var(--panel-bg); border-right: 1px solid var(--border-color);
-                transition: left 0.3s ease; z-index: 2000; overflow-y: hidden;
-                display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0,0,0,0.3); box-sizing: border-box;
-            }
-            #toc-sidebar.open { left: 0; }
-            #toc-header { padding: 20px 20px 10px 20px; border-bottom: 1px solid var(--border-color); }
-            #toc-header h3 { margin: 0 0 10px 0; font-family: sans-serif; color: var(--text-color); }
-            #toc-search { width: 100%; box-sizing: border-box; }
-            #toc-list-container { flex: 1; overflow-y: auto; padding: 10px 20px 20px 20px; }
-            #toc-list { list-style: none; padding: 0; margin: 0; font-size: 0.95em; }
-            #toc-list li { margin: 8px 0; }
-            #toc-list a { color: var(--text-color); text-decoration: none; opacity: 0.8; transition: opacity 0.2s, color 0.2s; display: block; }
-            #toc-list a:hover { opacity: 1; color: var(--accent-color); }
-            #toc-list ul { list-style: none; padding-left: 15px; border-left: 1px solid var(--border-color); margin-top: 5px; }
-
-            /* --- 토스트 알림 --- */
-            #toast {
-                position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-                background: var(--text-color); color: var(--bg-color); padding: 10px 20px;
-                border-radius: 30px; font-size: 0.9em; font-weight: bold; opacity: 0;
-                transition: opacity 0.3s ease; pointer-events: none; z-index: 9999;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            }
-
-            #top-btn {
-                position: fixed; bottom: 25px; right: 25px; width: 45px; height: 45px;
-                border-radius: 50%; font-size: 1.2em; display: none; z-index: 1000;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;
-            }
-
-            pre.loading { font-family: "Deltarune Font", Monospace; padding: 20px; }
-
-            /* --- 인게임 컬러 --- */
-            span.R { color: #ff5555; } span.B { color: #5555ff; } span.Y { color: #ffff55; }
-            span.G { color: #55ff55; } span.O { color: #ffaa55; } span.A { color: #55ffff; }
-            span.S { color: #ff55ff; } span.V { color: #aaffaa; } span.I { color: #aaccff; }
-            span.p { color: rgb(255, 138, 144); } span.s { color: #e2a8fc; }
-            span.a { color: #84f9ff; } span.y { color: #fff8a1; } span.g { color: #aeffbc; }
-            span.o { color: #ffac87; } span.b { color: #86a7ff; }
-
-            /* 라이트모드 텍스트 가독성 확보용 테두리 처리 */
-            body.light span.Y, body.light span.G, body.light span.A, body.light span.V, body.light span.S, body.light span.I {
-                -webkit-text-stroke: 1px var(--text-color); paint-order: stroke fill;
-            }
-
-            /* --- 특수 연출 (음성, 얼굴 아이콘) CSS --- */
-            .voiced {
-                padding-left: 24px; position: relative;
-            }
-            .voiced:before {
-                content: "🔊"; position: absolute; left: 0; top: 0;
-                font-size: 14px; opacity: 0.7; cursor: pointer;
-            }
-            body.light .voiced:before { opacity: 0.9; }
-            [data-sound] { cursor: pointer; }
-            
-            img.miniface {
-                width: 20px; height: 20px; vertical-align: bottom;
-                margin-right: 5px; image-rendering: pixelated;
-            }
-        </style>
-    </head>
-
-    <body>
-        <div id="toc-overlay"></div>
-        <div id="toc-sidebar">
-            <div id="toc-header">
-                <h3>Table of Contents</h3>
-                <input type="text" id="toc-search" placeholder="🔎 Search...">
-            </div>
-            <div id="toc-list-container">
-                <ul id="toc-list"></ul>
-            </div>
+        span.R{color:#ff5555} span.B{color:#5555ff} span.Y{color:#ffff55} span.G{color:#55ff55}
+        span.O{color:#ffaa55} span.A{color:#55ffff} span.S{color:#ff55ff} span.V{color:#aaffaa}
+        span.I{color:#aaccff} span.p{color:#ff8a90} span.s{color:#e2a8fc} span.a{color:#84f9ff}
+        span.y{color:#fff8a1} span.g{color:#aeffbc} span.o{color:#ffac87} span.b{color:#86a7ff}
+        body.light span.Y, body.light span.G, body.light span.A, body.light span.V, body.light span.S, body.light span.I {
+            -webkit-text-stroke: 1px var(--text-color); paint-order: stroke fill;
+        }
+        
+        .voiced { padding-left: 28px; position: relative; }
+        .voiced:before { content: "🔊"; position: absolute; left: 0; top: 0; font-size: 16px; opacity: 0.6; cursor: pointer; transition: opacity 0.2s; }
+        .voiced:hover:before { opacity: 1; }
+        [data-ensound], [data-jasound] { cursor: pointer; }
+        img.miniface { width: 20px; height: 20px; vertical-align: bottom; margin-right: 5px; image-rendering: pixelated; }
+    </style>
+</head>
+<body>
+    <div id="toc-overlay"></div>
+    <div id="toc-sidebar">
+        <div id="toc-header">
+            <h3>목차 (ToC)</h3>
+            <input type="text" id="toc-search" placeholder="🔎 목차 검색...">
         </div>
-        <div id="toast">Notification Message</div>
+        <div id="toc-list-container">
+            <ul id="toc-list"></ul>
+        </div>
+    </div>
+    <div id="toast"></div>
 
-        <div class="intro">
-            <div style="display: flex; gap: 10px;">
-                <button id="toc-toggle-btn" title="Toggle Table of Contents">
-                    <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                </button>
-                <button class="menu-toggle" id="menu-toggle">
-                    <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"></path></svg>
-                    Menu
-                </button>
-            </div>
-            
-            <div class="controls-wrapper" id="controls-wrapper">
-                <div class="control-row" id="lang-controls"></div>
-
-                <div class="control-row">
-                    <div class="control-group">
-                        <select id="chapter" name="chapter">
-                            <option value="all">All Chapters</option>
-                            <option value="1">Chapter 1</option>
-                            <option value="2">Chapter 2</option>
-                            <option value="3">Chapter 3</option>
-                            <option value="4">Chapter 4</option>
-                            <option value="5">Chapter 5</option>
-                        </select>
+    <div class="intro">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="toc-toggle-btn" title="목차 열기">
+                <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <button class="menu-toggle" id="menu-toggle">
+                <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"></path></svg> 설정 메뉴
+            </button>
+        </div>
+        
+        <div class="controls-wrapper" id="controls-wrapper" style="margin-top:10px;">
+            <div class="control-row" id="lang-controls"></div>
+            <div class="control-row">
+                <div class="control-group">
+                    <select id="chapter" name="chapter">
+                        <option value="all">모든 챕터</option>
+                        <option value="1">Chapter 1</option><option value="2">Chapter 2</option>
+                        <option value="3">Chapter 3</option><option value="4">Chapter 4</option>
+                        <option value="5">Chapter 5</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="search-wrapper">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="search-box" placeholder="텍스트 검색...">
                     </div>
-
-                    <div class="control-group">
-                        <div class="search-wrapper">
-                            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            <input type="text" id="search-box" placeholder="Search...">
-                        </div>
-                        <label title="Regular Expression" style="font-family: monospace; font-weight: bold; padding: 0 5px;">
-                            <input type="checkbox" id="regex-toggle"> .*
-                        </label>
-                    </div>
-
-                    <div class="control-group">
-                        <button type="button" id="view-toggle" title="Grid View">
-                            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18" rx="1"></rect><rect x="14" y="3" width="7" height="18" rx="1"></rect></svg>
-                        </button>
-                        
-                        <div style="display:flex; gap:4px; margin-left: 8px;">
-                            <button type="button" id="font-decrease" title="Decrease Font Size" style="font-weight:bold; width: 36px;">A-</button>
-                            <button type="button" id="font-increase" title="Increase Font Size" style="font-weight:bold; width: 36px;">A+</button>
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <button type="button" id="light-mode-toggle" title="Toggle Theme">
-                            <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                        </button>
+                    <label title="정규식(Regex) 사용" style="font-family: monospace; font-weight: bold; padding: 0 5px;">
+                        <input type="checkbox" id="regex-toggle"> .*
+                    </label>
+                    <span id="search-count"></span>
+                </div>
+                <div class="control-group">
+                    <button type="button" id="view-toggle" title="그리드 뷰 전환">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18" rx="1"></rect><rect x="14" y="3" width="7" height="18" rx="1"></rect></svg>
+                    </button>
+                    <div style="display:flex; gap:4px; margin-left: 8px;">
+                        <button type="button" id="font-decrease" title="폰트 축소" style="font-weight:bold; width: 36px;">A-</button>
+                        <button type="button" id="font-increase" title="폰트 확대" style="font-weight:bold; width: 36px;">A+</button>
                     </div>
                 </div>
-
-                <div id="txt-downloads" style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.9em; margin-top:5px;"></div>
+                <div class="control-group">
+                    <button type="button" id="light-mode-toggle" title="다크/라이트 테마">
+                        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                </div>
             </div>
+            <div id="txt-downloads" style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.9em; margin-top:5px;"></div>
         </div>
+    </div>
 
-        <div id="textboxes">
-            <pre class="loading">Loading...</pre>
-        </div>
+    <div id="textboxes"><div class="loading">데이터를 불러오는 중입니다...</div></div>
+    
+    <button id="top-btn" title="맨 위로 가기">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+    </button>
+
+    <script type="module">
+        import * as DRData from './data.json.js';
+
+        const langsAvailable = window.availableLangs || ["en", "ja"];
+        const textData = window.rendered;
+        const displayNames = { de: "Deutsch", fr: "Français", en: "English", es: "Español", ja: "日本語", ko: "한국어", pl: "Polski", "pt-BR": "Português", ru: "Русский", zh: "中文" };
+        const langElems = {};
+        const config = { chap: 'all', langs: [] };
         
-        <button id="top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-            <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-        </button>
+        const icons = {
+            link: `<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
+            copy: `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+            dl: `<svg style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>`,
+            arrowRight: `<svg viewBox="0 0 24 24"><path d="M5 12h14"></path><polyline points="12 5 19 12 12 19"></polyline></svg>`
+        };
 
-        <!-- 모듈을 사용하여 data.json.js 연동 및 렌더링 스크립트 실행 -->
-        <script type="module">
-            import * as DRData from './data.json.js';
+        let masterData = [];
+        let viewList = [];
+        
+        const buildMasterData = () => {
+            for (let c = 1; c <= 5; c++) {
+                if (!textData[c]) continue;
+                for (const group in textData[c]) {
+                    for (const msgId in textData[c][group]) {
+                        const rawMsgs = textData[c][group][msgId];
+                        let searchStr = "";
+                        langsAvailable.forEach(l => {
+                            if (rawMsgs[l]) {
+                                searchStr += rawMsgs[l].replace(/\\[a-zA-Z0-9~]|\^([0-9])/g, "").replace(/<[^>]*>?/gm, '') + " ";
+                            }
+                        });
+                        masterData.push({
+                            type: 'msg', id: msgId, chap: String(c), group: group,
+                            msgs: rawMsgs, searchStr: searchStr.toLowerCase()
+                        });
+                    }
+                }
+            }
+        };
 
-            // 인라인 핸들러 사용을 위한 전역 함수 등록
-            window.copyDeepLink = copyDeepLink;
-            window.copyBlockText = copyBlockText;
+        const initUI = () => {
+            const frag = document.createDocumentFragment();
+            const dlContainer = document.getElementById("txt-downloads");
 
-            const langsAvailable = window.availableLangs || ["en", "ja"];
-            const text = window.rendered;
-            
-            const langControls = document.getElementById("lang-controls");
-            const txtDownloads = document.getElementById("txt-downloads");
-            const langElems = {};
-            
-            const displayNames = {
-                de: "Deutsch", fr: "Français", en: "English", es: "Español",
-                ja: "日本語", ko: "한국어", pl: "Polski", "pt-BR": "Português",
-                ru: "Русский", zh: "中文"
-            };
-
-            const langFrag = document.createDocumentFragment();
             langsAvailable.forEach(l => {
                 const label = document.createElement("label");
                 const checkbox = document.createElement("input");
                 checkbox.type = "checkbox"; checkbox.value = l;
-                
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(" " + (displayNames[l] || l.toUpperCase())));
-                langFrag.appendChild(label);
+                label.append(checkbox, ` ${displayNames[l] || l.toUpperCase()}`);
+                frag.appendChild(label);
                 langElems[l] = checkbox;
-                checkbox.addEventListener('change', updateLangUrlAndRender);
+                checkbox.addEventListener('change', updateState);
 
-                const a = document.createElement("a");
-                a.href = `txt/DELTARUNE_${l}.txt`; a.target = "_blank";
-                a.style.color = "var(--text-color)"; a.style.textDecoration = "none";
-                a.style.display = "flex"; a.style.alignItems = "center"; a.style.gap = "4px";
-                a.innerHTML = `<svg style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg> ${displayNames[l] || l.toUpperCase()}`;
-                txtDownloads.appendChild(a);
+                const a = Object.assign(document.createElement("a"), {
+                    href: `txt/DELTARUNE_${l}.txt`, target: "_blank",
+                    innerHTML: `${icons.dl} ${displayNames[l] || l.toUpperCase()}`
+                });
+                a.style.cssText = "color:var(--text-color);text-decoration:none;display:flex;align-items:center;gap:4px;";
+                dlContainer.appendChild(a);
             });
-            langControls.appendChild(langFrag);
+            document.getElementById("lang-controls").appendChild(frag);
 
-            document.getElementById("menu-toggle").addEventListener("click", () => {
-                document.getElementById("controls-wrapper").classList.toggle("open");
-            });
-
+            document.getElementById("menu-toggle").addEventListener("click", () => document.getElementById("controls-wrapper").classList.toggle("open"));
             document.getElementById("light-mode-toggle").addEventListener("click", () => {
-                document.body.classList.toggle("light");
-                localStorage.setItem("drLightMode", document.body.classList.contains("light"));
+                const isLight = document.body.classList.toggle("light");
+                localStorage.setItem("drLightMode", isLight);
             });
             if (localStorage.getItem("drLightMode") === "true") document.body.classList.add("light");
 
-            let currentFontSize = parseInt(localStorage.getItem("drFontSize")) || 16;
-            document.documentElement.style.setProperty('--base-font-size', currentFontSize + 'px');
+            let currentFont = parseInt(localStorage.getItem("drFontSize")) || 16;
+            document.documentElement.style.setProperty('--base-font-size', currentFont + 'px');
+            const updateFont = (d) => { currentFont += d; document.documentElement.style.setProperty('--base-font-size', currentFont + 'px'); localStorage.setItem("drFontSize", currentFont); };
+            document.getElementById("font-increase").addEventListener("click", () => updateFont(2));
+            document.getElementById("font-decrease").addEventListener("click", () => updateFont(-2));
             
-            document.getElementById("font-increase").addEventListener("click", () => changeFontSize(2));
-            document.getElementById("font-decrease").addEventListener("click", () => changeFontSize(-2));
-            
-            function changeFontSize(delta) {
-                currentFontSize += delta;
-                document.documentElement.style.setProperty('--base-font-size', currentFontSize + 'px');
-                localStorage.setItem("drFontSize", currentFontSize);
-            }
-
-            const textboxesContainer = document.getElementById("textboxes");
-            const viewToggleBtn = document.getElementById("view-toggle");
-            
-            if(localStorage.getItem("drGridView") === "true") toggleGridView(true);
-            viewToggleBtn.addEventListener("click", () => toggleGridView());
-            
-            function toggleGridView(force) {
-                const isGrid = force !== undefined ? force : !textboxesContainer.classList.contains("grid-view");
-                textboxesContainer.classList.toggle("grid-view", isGrid);
+            const textboxes = document.getElementById("textboxes");
+            const viewToggle = document.getElementById("view-toggle");
+            const toggleGrid = (force) => {
+                const isGrid = force ?? !textboxes.classList.contains("grid-view");
+                textboxes.classList.toggle("grid-view", isGrid);
                 localStorage.setItem("drGridView", isGrid);
-                viewToggleBtn.style.background = isGrid ? "var(--accent-color)" : "";
-                viewToggleBtn.style.color = isGrid ? "#fff" : "";
+                viewToggle.style.background = isGrid ? "var(--accent-color)" : "";
+                viewToggle.style.color = isGrid ? "#fff" : "";
+            };
+            if(localStorage.getItem("drGridView") === "true") toggleGrid(true);
+            viewToggle.addEventListener("click", () => toggleGrid());
+
+            document.getElementById("top-btn").addEventListener("click", () => window.scrollTo({top:0, behavior:'smooth'}));
+            window.addEventListener("scroll", () => document.getElementById("top-btn").style.display = window.scrollY > 300 ? "flex" : "none");
+
+            document.getElementById("search-box").addEventListener("input", () => applyFilters());
+            document.getElementById("regex-toggle").addEventListener("change", () => applyFilters());
+            document.getElementById("chapter").addEventListener("change", (e) => updateState(e));
+            window.addEventListener("popstate", () => { loadState(); applyFilters(); });
+        };
+
+        const loadState = () => {
+            const params = new URLSearchParams(window.location.search);
+            config.chap = params.get("chap") || "all";
+            document.getElementById("chapter").value = config.chap;
+            const langParam = params.get('lang');
+            config.langs = langParam ? langParam.split(',') : (langsAvailable.includes('en') ? ['en'] : [langsAvailable[0]]);
+            langsAvailable.forEach(l => langElems[l] && (langElems[l].checked = config.langs.includes(l)));
+        };
+
+        const updateState = (e) => {
+            if (e?.target?.id === "chapter") config.chap = e.target.value;
+            else {
+                config.langs = langsAvailable.filter(l => langElems[l].checked);
+                if (!config.langs.length) config.langs.push(langsAvailable[0]);
+            }
+            const url = new URL(window.location.href);
+            config.chap === "all" ? url.searchParams.delete("chap") : url.searchParams.set("chap", config.chap);
+            url.searchParams.set('lang', config.langs.join(','));
+            window.history.pushState({}, '', url);
+            applyFilters();
+        };
+
+        const parseDeltaruneText = (text, msgId, chap, lang, highlightRegex) => {
+            if (!text) return "";
+            let isVoiced = false, baseSound = null, jaSound = null, colorOpen = false;
+
+            let parsed = text
+                .replace(/[&#]/g, "\n")
+                .replace(/\\V([a-zA-Z0-9])/g, (_, letter) => {
+                    if (typeof DRData !== 'undefined' && DRData.lookup_voiceclip) {
+                        const enRes = DRData.lookup_voiceclip(letter, msgId, "en");
+                        const jaRes = DRData.lookup_voiceclip(letter, msgId, "ja");
+                        const _base = Array.isArray(enRes) ? enRes[0] : enRes;
+                        const _ja = Array.isArray(jaRes) ? jaRes[0] : jaRes;
+                        if (_base) baseSound = _base;
+                        if (_ja) jaSound = _ja;
+                        if (baseSound || jaSound) isVoiced = true;
+                    }
+                    return "";
+                })
+                .replace(/\\c([A-Za-z0])/g, (_, c) => {
+                    let res = colorOpen ? "</span>" : "";
+                    if (c !== '0') { res += `<span class="${c}">`; colorOpen = true; }
+                    else colorOpen = false;
+                    return res;
+                })
+                .replace(/\\m([0-9])/g, (_, id) => {
+                    try {
+                        const kind = DRData.minifacekind(msgId, chap);
+                        const spr = DRData.minifacesprite(kind, id);
+                        return spr ? `<img class="miniface ${kind}" src="static/img/${spr}.png" alt="face">` : "";
+                    } catch(e) { return ""; }
+                })
+                .replace(/\\[METFSaOf][a-zA-Z0-9~]|\\C([0-9])|\^([0-9])/g, "");
+
+            if (colorOpen) parsed += "</span>";
+            if (highlightRegex) parsed = parsed.replace(highlightRegex, (match) => `<mark>${match}</mark>`);
+
+            let datasetStr = "";
+            if (baseSound) datasetStr += ` data-ensound="${baseSound}"`;
+            if (jaSound) datasetStr += ` data-jasound="${jaSound}"`;
+
+            return isVoiced ? `<div class="voiced" ${datasetStr} data-lang="${lang}">${parsed}</div>` : parsed;
+        };
+
+        let renderSeq = 0;
+        const applyFilters = (arg) => {
+            const jumpToId = typeof arg === 'string' ? arg : null;
+            const currentSeq = ++renderSeq;
+            const term = document.getElementById("search-box").value.toLowerCase();
+            const useRegex = document.getElementById("regex-toggle").checked;
+            
+            let searchRegex = null, highlightRegex = null;
+            if (term) {
+                try {
+                    searchRegex = useRegex ? new RegExp(term, 'i') : null;
+                    highlightRegex = useRegex ? new RegExp(`(${term})(?![^<]*>)`, 'gi') : new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?![^<]*>)`, 'gi');
+                } catch(e) {}
             }
 
-            window.addEventListener("scroll", () => {
-                document.getElementById("top-btn").style.display = window.scrollY > 300 ? "flex" : "none";
+            let matchCount = 0;
+            const matchedMsgs = [];
+
+            masterData.forEach(item => {
+                if (config.chap !== 'all' && item.chap !== config.chap) return;
+                let isMatch = true;
+                if (term) isMatch = searchRegex ? searchRegex.test(item.searchStr) : item.searchStr.includes(term);
+                if (isMatch) {
+                    matchedMsgs.push(item);
+                    matchCount++;
+                }
             });
 
-            let searchTimeout;
-            document.getElementById("search-box").addEventListener("input", () => {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(applyFilters, 300);
-            });
-            document.getElementById("regex-toggle").addEventListener("change", applyFilters);
+            document.getElementById("search-count").innerText = term ? `검색 결과: ${matchCount}건` : "";
 
-            function copyDeepLink(msgId) {
+            viewList = [];
+            let lastChap = null, lastGroup = null;
+            
+            matchedMsgs.forEach(item => {
+                if (item.chap !== lastChap) {
+                    viewList.push({ type: 'h1', id: item.chap, title: `Chapter ${item.chap}` });
+                    lastChap = item.chap;
+                }
+                if (item.group !== lastGroup) {
+                    const h2Title = item.group.replace(/_slash_/g, "/").replace(/_/g, '<span class="breakable">_</span>');
+                    viewList.push({ type: 'h2', id: `${item.chap}_${item.group}`, title: h2Title });
+                    lastGroup = item.group;
+                }
+                viewList.push(item);
+            });
+
+            renderVirtualDOM(currentSeq, highlightRegex, jumpToId);
+            buildToC();
+        };
+
+        const renderVirtualDOM = (seq, highlightRegex, forceScrollId = null) => {
+            const container = document.getElementById("textboxes");
+            container.innerHTML = "";
+            
+            if (viewList.length === 0) {
+                container.innerHTML = `<div class="loading">검색 결과가 없습니다.</div>`;
+                return;
+            }
+
+            const CHUNK_SIZE = 50;
+            let htmlBuffer = "";
+            
+            let forceUntilIdx = -1;
+            if (forceScrollId) {
+                forceUntilIdx = viewList.findIndex(x => x.id === forceScrollId);
+            }
+
+            const flushChunk = () => {
+                if (!htmlBuffer) return;
+                const chunkDiv = document.createElement("div");
+                chunkDiv.className = "render-chunk";
+                chunkDiv.innerHTML = htmlBuffer;
+                container.appendChild(chunkDiv);
+                htmlBuffer = "";
+            };
+
+            const process = (idx) => {
+                if (seq !== renderSeq) return;
+                
+                let end = Math.min(idx + CHUNK_SIZE, viewList.length);
+                if (forceScrollId && forceUntilIdx >= idx) {
+                    end = Math.min(forceUntilIdx + 20, viewList.length);
+                }
+
+                for (let i = idx; i < end; i++) {
+                    const item = viewList[i];
+                    
+                    if (item.type === 'h1') {
+                        htmlBuffer += `<h1 id="${item.id}"><a href="#${item.id}">${item.title}</a></h1>`;
+                    } else if (item.type === 'h2') {
+                        const isSearching = document.getElementById("search-box").value.trim() !== "";
+                        const contextBtn = isSearching ? `<button class="jump-context-btn" data-id="${item.id}">${icons.arrowRight} 문맥 보기</button>` : "";
+                        htmlBuffer += `<h2 id="${item.id}"><a href="#${item.id}">${item.title}</a>${contextBtn}</h2>`;
+                    } else {
+                        let groupHtml = "";
+                        config.langs.forEach(lang => {
+                            const msg = item.msgs[lang];
+                            if (msg === undefined) return;
+                            
+                            const isNull = msg === null;
+                            const className = `textbox ${lang} ${isNull ? "untranslated" : ""}`;
+                            const parsedMsg = isNull ? "[ NULL ]" : parseDeltaruneText(msg, `${item.group}_slash_${item.id}`, item.chap, lang, highlightRegex);
+                            groupHtml += `<div class="${className}" lang="${lang}">${parsedMsg}</div>`;
+                        });
+
+                        htmlBuffer += `
+                            <div class="msg-group" id="msg-${item.id}" data-idx="${i}">
+                                <div class="msg-actions">
+                                    <button class="link-btn" data-id="${item.id}" data-tooltip="링크 복사">${icons.link}</button>
+                                    <button class="copy-btn" data-idx="${i}" data-tooltip="텍스트 복사 (Shift+클릭: 범위지정)">${icons.copy}</button>
+                                </div>
+                                ${groupHtml}
+                            </div>
+                        `;
+                    }
+                }
+                flushChunk();
+
+                if (forceScrollId && forceUntilIdx >= idx && forceUntilIdx < end) {
+                    setTimeout(() => {
+                        const el = document.getElementById(forceScrollId);
+                        if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+                    }, 50);
+                    forceScrollId = null;
+                }
+
+                if (end < viewList.length) {
+                    if (forceScrollId) process(end);
+                    else requestAnimationFrame(() => process(end));
+                } else {
+                    if(window.location.hash && !forceScrollId) {
+                        const target = document.getElementById(window.location.hash.substring(1));
+                        if(target) setTimeout(() => target.scrollIntoView({behavior: 'smooth', block: 'center'}), 200);
+                    }
+                }
+            };
+            
+            if (forceScrollId) process(0);
+            else requestAnimationFrame(() => process(0));
+        };
+
+        let toastId;
+        const showToast = (title, subtext = "") => {
+            const toast = document.getElementById("toast");
+            toast.innerHTML = `${title}${subtext ? `<span>${subtext}</span>` : ''}`;
+            toast.classList.add("show");
+            clearTimeout(toastId);
+            toastId = setTimeout(() => toast.classList.remove("show"), 2500);
+        };
+
+        let rangeStartIndex = -1;
+        
+        const extractTextFromData = (item) => {
+            return config.langs.map(l => {
+                const text = item.msgs[l];
+                return text === null ? `[${displayNames[l] || l}] [미번역]` : `[${displayNames[l] || l}] ${text.replace(/[&#]/g, " ").replace(/\\[a-zA-Z0-9~]|\^([0-9])/g, "")}`;
+            }).join('\n');
+        };
+
+        document.getElementById("textboxes").addEventListener("click", (e) => {
+            const contextBtn = e.target.closest(".jump-context-btn");
+            if (contextBtn) {
+                document.getElementById("search-box").value = "";
+                applyFilters(contextBtn.dataset.id);
+                return;
+            }
+
+            const btn = e.target.closest("button.copy-btn, button.link-btn");
+            if (!btn) return;
+
+            if (btn.classList.contains("link-btn")) {
                 const url = new URL(window.location.href);
-                url.hash = `msg-${msgId}`;
+                url.hash = `msg-${btn.dataset.id}`;
                 navigator.clipboard.writeText(url.toString());
                 showToast("링크가 복사되었습니다.");
+                return;
             }
 
-            const config = { chap: 'all', langs: [] };
-            
-            document.getElementById("chapter").addEventListener("change", (e) => {
-                config.chap = e.target.value;
-                updateUrlAndRender();
-            });
+            const idx = parseInt(btn.dataset.idx);
+            const blockEl = btn.closest('.msg-group');
 
-            function updateLangUrlAndRender() {
-                const selectedLangs = langsAvailable.filter(l => langElems[l].checked);
-                if (selectedLangs.length === 0) selectedLangs.push(langsAvailable[0]);
-                config.langs = selectedLangs;
-                updateUrlAndRender();
-            }
+            if (e.shiftKey && rangeStartIndex !== -1) {
+                const start = Math.min(rangeStartIndex, idx);
+                const end = Math.max(rangeStartIndex, idx);
+                const copiedLines = [];
+                let msgCount = 0;
 
-            function updateUrlAndRender() {
-                const newURL = new URL(window.location.href);
-                if (config.chap === "all") newURL.searchParams.delete("chap");
-                else newURL.searchParams.set("chap", config.chap);
-                newURL.searchParams.set('lang', config.langs.join(','));
-                window.history.pushState({}, '', newURL);
-                render();
-            }
-
-            function loadConfigFromURL() {
-                const params = new URLSearchParams(window.location.search);
-                config.chap = params.get("chap") || "all";
-                document.getElementById("chapter").value = config.chap;
-
-                const langParam = params.get('lang');
-                let selected = langParam ? langParam.split(',') : (langsAvailable.includes('en') ? ['en'] : [langsAvailable[0]]);
-                config.langs = selected;
-
-                langsAvailable.forEach(l => {
-                    if(langElems[l]) langElems[l].checked = config.langs.includes(l);
-                });
-            }
-
-            function applyFilters() {
-                const searchTerm = document.getElementById("search-box").value.toLowerCase();
-                const useRegex = document.getElementById("regex-toggle").checked;
-                
-                let regex = null;
-                if (useRegex && searchTerm) {
-                    try { regex = new RegExp(searchTerm, 'i'); } catch(e) { regex = null; }
-                }
-
-                const container = document.getElementById("render-content");
-                if (!container) return;
-
-                let currentH1 = null; let currentH2 = null;
-                const visibility = new Map();
-                const elements = container.children;
-                
-                for (let i = 0; i < elements.length; i++) {
-                    const el = elements[i];
-                    if (el.tagName === 'H1') {
-                        currentH1 = el; visibility.set(currentH1, false);
-                    } else if (el.tagName === 'H2') {
-                        currentH2 = el; visibility.set(currentH2, false);
-                    } else if (el.classList.contains('msg-group')) {
-                        let isMatch = true;
-                        const plainText = el.getAttribute('data-text');
-
-                        if (searchTerm) {
-                            if (regex) isMatch = regex.test(plainText);
-                            else isMatch = plainText.includes(searchTerm);
-                        }
-                        el.style.display = isMatch ? "" : "none";
-                        if (isMatch) {
-                            if (currentH1) visibility.set(currentH1, true);
-                            if (currentH2) visibility.set(currentH2, true);
-                        }
+                for (let i = start; i <= end; i++) {
+                    if (viewList[i].type === 'msg') {
+                        copiedLines.push(extractTextFromData(viewList[i]));
+                        msgCount++;
                     }
                 }
-                for (let i = 0; i < elements.length; i++) {
-                    const el = elements[i];
-                    if (el.tagName === 'H1' || el.tagName === 'H2') {
-                        el.style.display = (!searchTerm || visibility.get(el)) ? "" : "none";
-                    }
-                }
-            }
-
-            // === 텍스트 파서 함수 (HushBugger 로직 연동) ===
-            function parseDeltaruneText(text, msgId, chap, lang) {
-                if (!text) return "";
-                let isVoiced = false;
-                let voiceSound = null;
-
-                // 1. 개행 기호(&, #)를 실제 줄바꿈으로 변경
-                text = text.replace(/[&#]/g, "\n");
-
-                // 2. 보이스 클립 재생 (\V)
-                text = text.replace(/\\V([a-zA-Z0-9])/g, (match, letter) => {
-                    // 💡 핵심: HushBugger 코드는 en, ja만 지원하므로 그 외 언어는 en으로 폴백(Fallback) 처리
-                    const audioLang = (lang === "ja") ? "ja" : "en";
-                    const [sndName] = DRData.lookup_voiceclip(letter, msgId, audioLang);
+                
+                const startEl = document.querySelector(`.msg-group[data-idx="${start}"]`);
+                const endEl = document.querySelector(`.msg-group[data-idx="${end}"]`);
+                if (startEl) { startEl.classList.add("copied"); setTimeout(() => startEl.classList.remove("copied"), 800); }
+                if (endEl && endEl !== startEl) { endEl.classList.add("copied"); setTimeout(() => endEl.classList.remove("copied"), 800); }
+                
+                navigator.clipboard.writeText(copiedLines.join('\n-----------------------\n'));
+                showToast(`총 ${msgCount}개의 대사가 일괄 복사되었습니다.`, copiedLines[0].substring(0, 50) + "...");
+                
+                const origStartEl = document.querySelector(`.msg-group[data-idx="${rangeStartIndex}"]`);
+                if (origStartEl) origStartEl.classList.remove("copy-range-start");
+                rangeStartIndex = -1;
+            } else {
+                if (e.shiftKey) {
+                    rangeStartIndex = idx;
+                    if (blockEl) blockEl.classList.add("copy-range-start");
+                    showToast("범위 지정 시작!", "Shift+클릭하여 끝 블록을 선택하세요.");
+                } else {
+                    const text = extractTextFromData(viewList[idx]);
+                    navigator.clipboard.writeText(text);
+                    showToast("대사가 복사되었습니다.", text.substring(0, 50) + "...");
                     
-                    if (sndName) voiceSound = sndName;
-                    isVoiced = true;
-                    return ""; // 기호는 숨김
-                });
-
-                // 3. 인게임 색상 적용 (\c)
-                let colorOpen = false;
-                text = text.replace(/\\c([A-Za-z0])/g, (match, colorCode) => {
-                    let res = colorOpen ? "</span>" : "";
-                    if (colorCode !== '0') {
-                        res += `<span class="${colorCode}">`;
-                        colorOpen = true;
-                    } else {
-                        colorOpen = false;
+                    if (blockEl) {
+                        blockEl.classList.add("copied");
+                        setTimeout(() => blockEl.classList.remove("copied"), 800);
                     }
-                    return res;
-                });
-                if (colorOpen) text += "</span>";
-
-                // 4. 미니페이스 얼굴 아이콘 렌더링 (\m)
-                text = text.replace(/\\m([0-9])/g, (match, faceId) => {
-                    try {
-                        let kind = DRData.minifacekind(msgId, chap);
-                        let sprite = DRData.minifacesprite(kind, faceId);
-                        if (sprite) return `<img class="miniface ${kind}" src="static/img/${sprite}.png" alt="face">`;
-                    } catch(e) {}
-                    return "";
-                });
-
-                // 5. 불필요한 제어 문자들 찌꺼기 제거
-                text = text.replace(/\\[METFSaOf][a-zA-Z0-9~]/g, "");
-                text = text.replace(/\\C([0-9])/g, ""); 
-                text = text.replace(/\^([0-9])/g, "");  
-
-                // 6. 보이스 태그 감싸기 (💡 data-lang 속성을 추가해서 언어 정보 저장!)
-                if (isVoiced && voiceSound) {
-                    return `<div class="voiced" data-sound="${voiceSound}" data-lang="${lang}">${text}</div>`;
+                    if (rangeStartIndex !== -1) {
+                        const startEl = document.querySelector(`.msg-group[data-idx="${rangeStartIndex}"]`);
+                        if (startEl) startEl.classList.remove("copy-range-start");
+                        rangeStartIndex = -1;
+                    }
                 }
-                return text;
             }
+        });
 
-            const linkIcon = `<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
-            const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
-
-            let curRendered = null;
-            let renderStateId = 0; 
-
-            function render() {
-                if (!text) return;
-                
-                const thisRender = `${config.chap}:${config.langs.join('+')}`;
-                if (thisRender === curRendered) { applyFilters(); return; }
-
-                renderStateId++;
-                const currentRenderId = renderStateId;
-
-                textboxesContainer.innerHTML = `
-                    <div id="loading-container" style="padding: 40px 20px; max-width: 600px; margin: 0 auto; text-align: center;">
-                        <h2 style="margin-bottom: 15px; font-family: sans-serif;">Loading Text Data...</h2>
-                        <div style="width: 100%; height: 10px; background: var(--border-color); border-radius: 5px; overflow: hidden;">
-                            <div id="loading-bar" style="width: 0%; height: 100%; background: var(--accent-color); transition: width 0.1s ease-out;"></div>
-                        </div>
-                        <p id="loading-text" style="margin-top: 10px; font-family: monospace;">0%</p>
-                    </div>
-                    <div id="render-content"></div>
-                `;
-
-                const renderContent = document.getElementById("render-content");
-                const loadingBar = document.getElementById("loading-bar");
-                const loadingText = document.getElementById("loading-text");
-                const loadingContainer = document.getElementById("loading-container");
-
-                const tasks = [];
-                for (let chap = 1; chap <= 5; chap++) {
-                    if (config.chap !== String(chap) && config.chap !== "all") continue;
-                    const chapterData = text[chap];
-                    if (!chapterData) continue;
-
-                    tasks.push({ isChap: true, chap });
-                    for (const groupName in chapterData) {
-                        tasks.push({ isChap: false, chap, groupName, groupData: chapterData[groupName] });
-                    }
-                }
-
-                const totalTasks = tasks.length;
-                let currentIdx = 0;
-                const chunkSize = 20; 
-
-                // 배열을 이용한 문자열 접합 최적화
-                function processNextChunk() {
-                    if (currentRenderId !== renderStateId) return;
-
-                    const htmlBuffer = [];
-                    const endIdx = Math.min(currentIdx + chunkSize, totalTasks);
-
-                    for (; currentIdx < endIdx; currentIdx++) {
-                        const task = tasks[currentIdx];
-
-                        if (task.isChap) {
-                            htmlBuffer.push(`<h1 id="${task.chap}"><a href="#${task.chap}">Chapter ${task.chap}</a></h1>`);
-                        } else {
-                            let titleAdded = false;
-                            for (const msgId in task.groupData) {
-                                let groupContent = "";
-                                let combinedTextForSearch = "";
-
-                                for (let i = 0; i < config.langs.length; i++) {
-                                    const lang = config.langs[i];
-                                    let msg = task.groupData[msgId][lang];
-                                    
-                                    if (msg === undefined) continue;
-
-                                    let className = `textbox ${lang}`;
-                                    if (msg === null) {
-                                        className += " untranslated";
-                                        msg = `[ NULL ]`;
-                                    } else {
-                                        // 파서 함수 적용 (음성, 색상, 아이콘 연출 렌더링)
-                                        // data.json.js가 인식할 수 있도록 잘려나갔던 원본 키를 다시 조립해줌
-                                        const fullMsgId = task.groupName + "_slash_" + msgId;
-
-                                        // msgId 대신 fullMsgId를 넘겨줌!
-                                        msg = parseDeltaruneText(msg, fullMsgId, String(task.chap), lang);
-                                        combinedTextForSearch += msg.replace(/<[^>]*>?/gm, '').toLowerCase() + " ";
-                                    }
-
-                                    groupContent += `<div class="${className}" lang="${lang}">${msg}</div>`;
-                                }
-
-                                if (groupContent !== "") {
-                                    if (!titleAdded) {
-                                        const finalH2Text = task.groupName.replace(/_slash_/g, "/").replace(/_/g, '<span class="breakable">_</span>');
-                                        htmlBuffer.push(`<h2 id="${task.chap}_${task.groupName}"><a href="#${task.chap}_${task.groupName}">${finalH2Text}</a></h2>`);
-                                        titleAdded = true;
-                                    }
-
-                                    htmlBuffer.push(`
-                                        <div class="msg-group" id="msg-${msgId}" data-text="${combinedTextForSearch.replace(/"/g, '&quot;')}">
-                                            <div class="msg-actions">
-                                                <button onclick="copyDeepLink('${msgId}')" data-tooltip="링크 복사">${linkIcon}</button>
-                                                <button onclick="copyBlockText(event, '${msgId}')" data-tooltip="텍스트 복사 (Shift + 클릭하여 여러 줄 복사)">${copyIcon}</button>
-                                            </div>
-                                            ${groupContent}
-                                        </div>
-                                    `);
-                                }
-                            }
-                        }
-                    }
-
-                    if (htmlBuffer.length > 0) {
-                        const tempDiv = document.createElement("div");
-                        tempDiv.innerHTML = htmlBuffer.join("");
-                        while (tempDiv.firstChild) renderContent.appendChild(tempDiv.firstChild);
-                    }
-
-                    const progress = Math.floor((currentIdx / totalTasks) * 100);
-                    loadingBar.style.width = progress + "%";
-                    loadingText.innerText = progress + "%";
-
-                    if (currentIdx < totalTasks) {
-                        requestAnimationFrame(processNextChunk); 
-                    } else {
-                        loadingContainer.style.display = "none";
-                        curRendered = thisRender;
-                        applyFilters();
-                        buildToC();
-                        
-                        setTimeout(() => {
-                            if(window.location.hash) {
-                                const target = document.getElementById(window.location.hash.substring(1));
-                                if(target) target.scrollIntoView({behavior: 'smooth', block: 'center'});
-                            }
-                        }, 100);
-                    }
-                }
-                requestAnimationFrame(processNextChunk);
+        const scrollToId = (id) => {
+            window.history.pushState(null, null, `#${id}`);
+            const el = document.getElementById(id);
+            if (el) {
+                el.scrollIntoView({behavior: 'smooth', block: 'start'});
+            } else {
+                applyFilters(id);
             }
+        };
 
-            loadConfigFromURL();
-            render();
+        const buildToC = () => {
+            const tocList = document.getElementById("toc-list");
+            const html = [];
+            let inChap = false;
+
+            viewList.forEach(item => {
+                if (item.type === 'h1') {
+                    if (inChap) html.push(`</ul></li>`);
+                    html.push(`<li><a href="#${item.id}" style="font-weight:bold;">${item.title}</a><ul>`);
+                    inChap = true;
+                } else if (item.type === 'h2') {
+                    html.push(`<li><a href="#${item.id}">${item.title}</a></li>`);
+                }
+            });
+            if (inChap) html.push(`</ul></li>`);
             
-            window.addEventListener("popstate", () => {
-                loadConfigFromURL();
-                render();
-            });
+            tocList.innerHTML = html.join("");
+            tocList.querySelectorAll("a").forEach(a => a.addEventListener("click", (e) => {
+                e.preventDefault();
+                document.getElementById("toc-sidebar").classList.remove("open");
+                document.getElementById("toc-overlay").classList.remove("open");
+                const id = a.getAttribute("href").substring(1);
+                scrollToId(id);
+            }));
+        };
 
-            let toastTimeout;
-            function showToast(message) {
-                const toast = document.getElementById("toast");
-                toast.innerText = message; toast.style.opacity = "1";
-                clearTimeout(toastTimeout);
-                toastTimeout = setTimeout(() => { toast.style.opacity = "0"; }, 2500);
-            }
-
-            const tocSidebar = document.getElementById("toc-sidebar");
-            const tocOverlay = document.getElementById("toc-overlay");
-
-            document.getElementById("toc-toggle-btn").addEventListener("click", () => {
-                tocSidebar.classList.add("open"); tocOverlay.classList.add("open");
-            });
-            tocOverlay.addEventListener("click", () => {
-                tocSidebar.classList.remove("open"); tocOverlay.classList.remove("open");
-            });
-
-            document.getElementById("toc-search").addEventListener("input", (e) => {
-                const term = e.target.value.toLowerCase();
-                const tocList = document.getElementById("toc-list");
-                Array.from(tocList.children).forEach(h1Li => {
-                    const h1A = h1Li.querySelector("a");
-                    const ul = h1Li.querySelector("ul");
-                    let h1Match = h1A.innerText.toLowerCase().includes(term);
-                    let anyH2Match = false;
-
-                    if (ul) {
-                        Array.from(ul.children).forEach(h2Li => {
-                            const h2A = h2Li.querySelector("a");
-                            if (h1Match || h2A.innerText.toLowerCase().includes(term)) {
-                                h2Li.style.display = ""; anyH2Match = true;
-                            } else h2Li.style.display = "none";
-                        });
-                    }
-                    h1Li.style.display = (h1Match || anyH2Match) ? "" : "none";
+        document.getElementById("toc-toggle-btn").addEventListener("click", () => {
+            document.getElementById("toc-sidebar").classList.add("open");
+            document.getElementById("toc-overlay").classList.add("open");
+        });
+        document.getElementById("toc-overlay").addEventListener("click", (e) => {
+            document.getElementById("toc-sidebar").classList.remove("open");
+            e.target.classList.remove("open");
+        });
+        
+        document.getElementById("toc-search").addEventListener("input", (e) => {
+            const term = e.target.value.toLowerCase();
+            Array.from(document.getElementById("toc-list").children).forEach(h1Li => {
+                const h1Match = h1Li.querySelector("a").innerText.toLowerCase().includes(term);
+                let anyH2 = false;
+                const ul = h1Li.querySelector("ul");
+                if (ul) Array.from(ul.children).forEach(h2Li => {
+                    const h2Match = h1Match || h2Li.querySelector("a").innerText.toLowerCase().includes(term);
+                    h2Li.style.display = h2Match ? "" : "none";
+                    if (h2Match) anyH2 = true;
                 });
+                h1Li.style.display = (h1Match || anyH2) ? "" : "none";
             });
+        });
 
-            function buildToC() {
-                const container = document.getElementById("render-content");
-                const tocList = document.getElementById("toc-list");
-                const htmlBuffer = [];
-                let inChap = false;
+        let activeAudio = null;
+        document.addEventListener("click", (e) => {
+            const voiced = e.target.closest(".voiced");
+            if (!voiced) return;
+            if (!voiced.dataset.ensound && !voiced.dataset.jasound) return;
 
-                for (let i = 0; i < container.children.length; i++) {
-                    const el = container.children[i];
-                    if (el.tagName === 'H1') {
-                        if (inChap) htmlBuffer.push(`</ul></li>`);
-                        htmlBuffer.push(`<li><a href="#${el.id}" style="font-weight:bold;">${el.innerText}</a><ul>`);
-                        inChap = true;
-                    } else if (el.tagName === 'H2') {
-                        htmlBuffer.push(`<li><a href="#${el.id}">${el.innerText}</a></li>`);
-                    }
-                }
-                if (inChap) htmlBuffer.push(`</ul></li>`);
-                tocList.innerHTML = htmlBuffer.join("");
+            activeAudio?.pause();
+            activeAudio = document.createElement("audio");
+            const enSnd = voiced.dataset.ensound, jaSnd = voiced.dataset.jasound, lang = voiced.dataset.lang;
+            const paths = [];
 
-                tocList.querySelectorAll("a").forEach(a => {
-                    a.addEventListener("click", () => {
-                        tocSidebar.classList.remove("open"); tocOverlay.classList.remove("open");
-                    });
-                });
+            if (lang === "ko") {
+                if (enSnd) paths.push(`ko/${enSnd}_ko.wav`, `ko/${enSnd}_kr.wav`);
+            } else if (lang === "es") {
+                if (enSnd) paths.push(`es/${enSnd}.ogg`, `es/sp_${enSnd}.ogg`);
+            } else if (lang === "ru") {
+                if (enSnd) paths.push(`ru/${enSnd}.ogg`);
+            } else if (lang === "ja") {
+                if (jaSnd) paths.push(`${jaSnd}.mp3`, `${jaSnd}.opus`);
+                if (enSnd) paths.push(`${enSnd}_ja.mp3`, `${enSnd}_ja.opus`);
             }
+            if (enSnd) paths.push(`${enSnd}.mp3`, `${enSnd}.opus`);
 
-            let firstSelectedBlock = null;
+            paths.forEach(p => activeAudio.appendChild(Object.assign(document.createElement('source'), { src: `static/snd/${p}` })));
+            activeAudio.play().catch(console.error);
+        });
 
-            function copyBlockText(event, msgId) {
-                const currentBlock = document.getElementById(`msg-${msgId}`);
-                if (event.shiftKey) {
-                    if (!firstSelectedBlock) {
-                        firstSelectedBlock = currentBlock;
-                        currentBlock.classList.add("selected-for-copy");
-                        showToast("범위 복사 시작! 마지막 블록을 Shift+클릭 하세요.");
-                        return;
-                    } else {
-                        copyRange(firstSelectedBlock, currentBlock);
-                        firstSelectedBlock.classList.remove("selected-for-copy");
-                        firstSelectedBlock = null;
-                        return;
-                    }
-                }
-                if (firstSelectedBlock) {
-                    firstSelectedBlock.classList.remove("selected-for-copy");
-                    firstSelectedBlock = null;
-                }
-                navigator.clipboard.writeText(extractText(currentBlock));
-                showToast("번역 텍스트가 복사되었습니다.");
-            }
+        initUI();
+        loadState();
+        buildMasterData();
+        applyFilters();
 
-            function extractText(block) {
-                let res = [];
-                block.querySelectorAll('.textbox').forEach(box => {
-                    const lang = box.getAttribute('lang').toUpperCase();
-                    const text = box.textContent; 
-                    res.push(`[${lang}] ${text}`);
-                });
-                return res.join('\n');
-            }
-
-            function copyRange(startBlock, endBlock) {
-                const allBlocks = Array.from(document.querySelectorAll('.msg-group'));
-                const idx1 = allBlocks.indexOf(startBlock);
-                const idx2 = allBlocks.indexOf(endBlock);
-                if (idx1 === -1 || idx2 === -1) return;
-
-                const startIdx = Math.min(idx1, idx2);
-                const endIdx = Math.max(idx1, idx2);
-                let res = []; let count = 0;
-
-                for (let i = startIdx; i <= endIdx; i++) {
-                    const block = allBlocks[i];
-                    if (block.style.display !== "none") {
-                        res.push(extractText(block)); res.push("-----------------------"); count++;
-                    }
-                }
-                navigator.clipboard.writeText(res.join('\n'));
-                showToast(`${count}개 블록이 일괄 복사되었습니다.`);
-            }
-
-            // ===============================================
-            // 오디오 클릭 시 재생 이벤트 리스너 (다국어 더빙 + 자동 폴백 지원)
-            // ===============================================
-            let currentAudio = null;
-            document.addEventListener("click", function (event) {
-                const soundElem = event.target.closest(".voiced");
-                if (!soundElem || !soundElem.dataset.sound) return;
-
-                let soundName = soundElem.dataset.sound;
-                let lang = soundElem.dataset.lang; // 어느 언어 대사인지 가져옴
-                
-                if (currentAudio) {
-                    currentAudio.pause();
-                }
-                
-                // HTML5 <audio> 요소 생성
-                currentAudio = document.createElement("audio");
-
-                // 1순위: 선택한 언어의 더빙 파일 찾기
-                if (lang === "ko") {
-                    // 한국어는 파일 끝에 _ko.wav 또는 _kr.wav가 붙어 있으므로 둘 다 시도
-                    currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/ko/${soundName}_ko.wav`}));
-                    currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/ko/${soundName}_kr.wav`}));
-                } else if (lang === "es") {
-                    currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/es/${soundName}.ogg`}));
-                } else if (lang === "ru") {
-                    currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/ru/${soundName}.ogg`}));
-                }
-
-                // 2순위: 1순위 파일이 없거나(예: 펀텍스트 효과음) en, ja일 경우 원본(기본값) 재생
-                currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/${soundName}.mp3`}));
-                currentAudio.appendChild(Object.assign(document.createElement('source'), {src: `static/snd/${soundName}.opus`}));
-
-                // 재생 시작
-                currentAudio.play().catch(e => console.log("Audio playback failed: ", e));
-            });
-        </script>
-    </body>
+    </script>
+</body>
 </html>
