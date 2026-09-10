@@ -55,6 +55,9 @@
         .search-wrapper input { padding-left: 32px; width: 220px; }
         #search-count { font-size: 0.85em; opacity: 0.8; font-weight: bold; margin-left: 5px; color: var(--accent-color); }
 
+        html { scroll-padding-top: 140px; }
+        h1, h2, .msg-group { scroll-margin-top: 140px; }
+
         @media (max-width: 768px) {
             .menu-toggle { display: flex; }
             .controls-wrapper { display: none; padding-top: 15px; }
@@ -69,20 +72,14 @@
         .breakable { word-break: break-all; }
         mark { background-color: rgba(255, 235, 59, 0.4); color: inherit; border-radius: 2px; padding: 0 2px; }
 
-        .jump-context-btn {
-            display: none; background: var(--accent-color); color: #fff; border: none; padding: 4px 10px; border-radius: 20px; font-size: 0.6em; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-left: 10px;
-        }
+        .jump-context-btn { display: none; background: var(--accent-color); color: #fff; border: none; padding: 4px 10px; border-radius: 20px; font-size: 0.6em; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-left: 10px; }
         .jump-context-btn svg { width: 14px; height: 14px; stroke: #fff; }
         h2:hover .jump-context-btn { display: inline-flex; align-items: center; gap: 5px; }
         .jump-context-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
 
-        .render-chunk { content-visibility: auto; contain-intrinsic-size: auto 1500px; }
+        .render-chunk { }
         
-        .msg-group {
-            position: relative; padding-left: 45px; margin-bottom: 15px;
-            border-bottom: 1px dashed var(--border-color); padding-bottom: 15px;
-            transition: background 0.3s, border-color 0.3s; border-left: 4px solid transparent;
-        }
+        .msg-group { position: relative; padding-left: 45px; margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; transition: background 0.3s, border-color 0.3s; border-left: 4px solid transparent; }
         #textboxes.grid-view .msg-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
         .textbox { white-space: pre-wrap; padding: 5px 0; font-family: "Deltarune Font", Monospace; }
         .untranslated { color: #ff6b6b; background: rgba(255, 0, 0, 0.05); border-left: 4px solid #ff6b6b; padding-left: 10px; font-style: italic; }
@@ -94,25 +91,14 @@
         .msg-actions button:hover { background: var(--btn-hover); opacity: 1 !important; border-color: var(--border-color); }
         .msg-actions button.copy-btn svg { fill: none; stroke: currentColor; }
         
-        .msg-actions button::after {
-            content: attr(data-tooltip); position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
-            margin-left: 8px; background: var(--text-color); color: var(--bg-color); padding: 5px 10px;
-            border-radius: 6px; font-size: 0.85em; white-space: nowrap; opacity: 0; pointer-events: none;
-            transition: opacity 0.2s, margin-left 0.2s; font-weight: bold; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
+        .msg-actions button::after { content: attr(data-tooltip); position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 8px; background: var(--text-color); color: var(--bg-color); padding: 5px 10px; border-radius: 6px; font-size: 0.85em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s, margin-left 0.2s; font-weight: bold; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .msg-actions button:hover::after { opacity: 1; margin-left: 12px; }
 
         .msg-group.copied { background: rgba(76, 175, 80, 0.15); border-left-color: var(--copy-color); }
-        .msg-group.copy-range-start { border-left-color: var(--accent-color); background: rgba(90, 159, 212, 0.08); }
 
         #toc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
         #toc-overlay.open { display: block; }
-        #toc-sidebar {
-            position: fixed; top: 0; left: -320px; width: 300px; height: 100vh;
-            background: var(--panel-bg); border-right: 1px solid var(--border-color);
-            transition: left 0.3s ease; z-index: 2000; overflow-y: hidden;
-            display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.4); box-sizing: border-box;
-        }
+        #toc-sidebar { position: fixed; top: 0; left: -320px; width: 300px; height: 100vh; background: var(--panel-bg); border-right: 1px solid var(--border-color); transition: left 0.3s ease; z-index: 2000; overflow-y: hidden; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.4); box-sizing: border-box; }
         #toc-sidebar.open { left: 0; }
         #toc-header { padding: 20px; border-bottom: 1px solid var(--border-color); }
         #toc-header h3 { margin: 0 0 12px 0; color: var(--text-color); }
@@ -124,29 +110,22 @@
         #toc-list a:hover { opacity: 1; color: var(--accent-color); background: rgba(90, 159, 212, 0.1); }
         #toc-list ul { list-style: none; padding-left: 15px; border-left: 1px solid var(--border-color); margin-top: 5px; }
 
-        #toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
-            background: var(--text-color); color: var(--bg-color); padding: 12px 24px;
-            border-radius: 30px; font-size: 0.95em; font-weight: bold; opacity: 0;
-            transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); pointer-events: none; z-index: 9999; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 80%;
-        }
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 30px; font-size: 0.95em; font-weight: bold; opacity: 0; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); pointer-events: none; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 80%; }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         #toast span { display: block; font-size: 0.8em; font-weight: normal; margin-top: 4px; opacity: 0.8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 300px; }
 
-        #top-btn {
-            position: fixed; bottom: 25px; right: 25px; width: 45px; height: 45px; border-radius: 50%;
-            font-size: 1.2em; display: none; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
+        #top-btn { position: fixed; bottom: 25px; right: 25px; width: 45px; height: 45px; border-radius: 50%; font-size: 1.2em; display: none; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .loading { font-family: "Deltarune Font", Monospace; padding: 40px; text-align: center; font-size: 1.2em; }
+
+        #global-loader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); color:#fff; z-index:99999; align-items:center; justify-content:center; flex-direction:column; font-family:"Deltarune Font", Monospace; font-size:1.5em; backdrop-filter:blur(3px); }
+        .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,0.2); border-top-color:var(--accent-color); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:15px; }
+        @keyframes spin { 100% { transform:rotate(360deg); } }
 
         span.R{color:#ff5555} span.B{color:#5555ff} span.Y{color:#ffff55} span.G{color:#55ff55}
         span.O{color:#ffaa55} span.A{color:#55ffff} span.S{color:#ff55ff} span.V{color:#aaffaa}
         span.I{color:#aaccff} span.p{color:#ff8a90} span.s{color:#e2a8fc} span.a{color:#84f9ff}
         span.y{color:#fff8a1} span.g{color:#aeffbc} span.o{color:#ffac87} span.b{color:#86a7ff}
-        body.light span.Y, body.light span.G, body.light span.A, body.light span.V, body.light span.S, body.light span.I {
-            -webkit-text-stroke: 1px var(--text-color); paint-order: stroke fill;
-        }
+        body.light span.Y, body.light span.G, body.light span.A, body.light span.V, body.light span.S, body.light span.I { -webkit-text-stroke: 1px var(--text-color); paint-order: stroke fill; }
         
         .voiced { padding-left: 28px; position: relative; }
         .voiced:before { content: "🔊"; position: absolute; left: 0; top: 0; font-size: 16px; opacity: 0.6; cursor: pointer; transition: opacity 0.2s; }
@@ -156,6 +135,11 @@
     </style>
 </head>
 <body>
+    <div id="global-loader">
+        <div class="spinner"></div>
+        <span id="loader-text">이동 중...</span>
+    </div>
+
     <div id="toc-overlay"></div>
     <div id="toc-sidebar">
         <div id="toc-header">
@@ -242,7 +226,19 @@
 
         let masterData = [];
         let viewList = [];
-        
+        let lastActionIdx = -1;
+
+        const showLoader = (msg, task) => {
+            document.getElementById("loader-text").innerText = msg;
+            const loader = document.getElementById("global-loader");
+            loader.style.display = "flex";
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    try { task(); } finally { loader.style.display = "none"; }
+                });
+            });
+        };
+
         const buildMasterData = () => {
             for (let c = 1; c <= 5; c++) {
                 if (!textData[c]) continue;
@@ -449,7 +445,7 @@
             
             let forceUntilIdx = -1;
             if (forceScrollId) {
-                forceUntilIdx = viewList.findIndex(x => x.id === forceScrollId);
+                forceUntilIdx = viewList.findIndex(x => x.id === forceScrollId || `msg-${x.id}` === forceScrollId);
             }
 
             const flushChunk = () => {
@@ -504,10 +500,14 @@
                 flushChunk();
 
                 if (forceScrollId && forceUntilIdx >= idx && forceUntilIdx < end) {
-                    setTimeout(() => {
-                        const el = document.getElementById(forceScrollId);
-                        if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
-                    }, 50);
+                    const targetId = forceScrollId;
+                    let retries = 0;
+                    const scrollTarget = () => {
+                        const el = document.getElementById(targetId);
+                        if (el) el.scrollIntoView({behavior: 'auto', block: 'start'});
+                        if (++retries < 6) setTimeout(scrollTarget, 150);
+                    };
+                    setTimeout(scrollTarget, 50);
                     forceScrollId = null;
                 }
 
@@ -517,7 +517,7 @@
                 } else {
                     if(window.location.hash && !forceScrollId) {
                         const target = document.getElementById(window.location.hash.substring(1));
-                        if(target) setTimeout(() => target.scrollIntoView({behavior: 'smooth', block: 'center'}), 200);
+                        if(target) setTimeout(() => target.scrollIntoView({behavior: 'auto', block: 'start'}), 300);
                     }
                 }
             };
@@ -534,21 +534,45 @@
             clearTimeout(toastId);
             toastId = setTimeout(() => toast.classList.remove("show"), 2500);
         };
-
-        let rangeStartIndex = -1;
         
         const extractTextFromData = (item) => {
             return config.langs.map(l => {
                 const text = item.msgs[l];
+                if (text === undefined) return "";
                 return text === null ? `[${displayNames[l] || l}] [미번역]` : `[${displayNames[l] || l}] ${text.replace(/[&#]/g, " ").replace(/\\[a-zA-Z0-9~]|\^([0-9])/g, "")}`;
-            }).join('\n');
+            }).filter(x => x !== "").join('\n');
+        };
+
+        const copyTextHandler = (text, successMsg, previewText) => {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => showToast(successMsg, previewText)).catch(() => fallbackCopy(text, successMsg, previewText));
+            } else {
+                fallbackCopy(text, successMsg, previewText);
+            }
+        };
+
+        const fallbackCopy = (text, successMsg, previewText) => {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed"; ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand("copy");
+                showToast(successMsg, previewText);
+            } catch (err) {
+                showToast("복사 실패", "브라우저 권한을 확인해주세요.");
+            }
+            document.body.removeChild(ta);
         };
 
         document.getElementById("textboxes").addEventListener("click", (e) => {
             const contextBtn = e.target.closest(".jump-context-btn");
             if (contextBtn) {
-                document.getElementById("search-box").value = "";
-                applyFilters(contextBtn.dataset.id);
+                showLoader("문맥을 불러오는 중...", () => {
+                    document.getElementById("search-box").value = "";
+                    applyFilters(contextBtn.dataset.id);
+                });
                 return;
             }
 
@@ -558,17 +582,16 @@
             if (btn.classList.contains("link-btn")) {
                 const url = new URL(window.location.href);
                 url.hash = `msg-${btn.dataset.id}`;
-                navigator.clipboard.writeText(url.toString());
-                showToast("링크가 복사되었습니다.");
+                copyTextHandler(url.toString(), "링크가 복사되었습니다.", "");
                 return;
             }
 
             const idx = parseInt(btn.dataset.idx);
             const blockEl = btn.closest('.msg-group');
 
-            if (e.shiftKey && rangeStartIndex !== -1) {
-                const start = Math.min(rangeStartIndex, idx);
-                const end = Math.max(rangeStartIndex, idx);
+            if (e.shiftKey && lastActionIdx !== -1) {
+                const start = Math.min(lastActionIdx, idx);
+                const end = Math.max(lastActionIdx, idx);
                 const copiedLines = [];
                 let msgCount = 0;
 
@@ -584,43 +607,28 @@
                 if (startEl) { startEl.classList.add("copied"); setTimeout(() => startEl.classList.remove("copied"), 800); }
                 if (endEl && endEl !== startEl) { endEl.classList.add("copied"); setTimeout(() => endEl.classList.remove("copied"), 800); }
                 
-                navigator.clipboard.writeText(copiedLines.join('\n-----------------------\n'));
-                showToast(`총 ${msgCount}개의 대사가 일괄 복사되었습니다.`, copiedLines[0].substring(0, 50) + "...");
+                const resText = copiedLines.join('\n-----------------------\n');
+                if (copiedLines.length > 0) {
+                    copyTextHandler(resText, `총 ${msgCount}개의 대사가 일괄 복사되었습니다.`, copiedLines[0].substring(0, 50) + "...");
+                }
                 
-                const origStartEl = document.querySelector(`.msg-group[data-idx="${rangeStartIndex}"]`);
-                if (origStartEl) origStartEl.classList.remove("copy-range-start");
-                rangeStartIndex = -1;
             } else {
-                if (e.shiftKey) {
-                    rangeStartIndex = idx;
-                    if (blockEl) blockEl.classList.add("copy-range-start");
-                    showToast("범위 지정 시작!", "Shift+클릭하여 끝 블록을 선택하세요.");
-                } else {
-                    const text = extractTextFromData(viewList[idx]);
-                    navigator.clipboard.writeText(text);
-                    showToast("대사가 복사되었습니다.", text.substring(0, 50) + "...");
-                    
-                    if (blockEl) {
-                        blockEl.classList.add("copied");
-                        setTimeout(() => blockEl.classList.remove("copied"), 800);
-                    }
-                    if (rangeStartIndex !== -1) {
-                        const startEl = document.querySelector(`.msg-group[data-idx="${rangeStartIndex}"]`);
-                        if (startEl) startEl.classList.remove("copy-range-start");
-                        rangeStartIndex = -1;
-                    }
+                const text = extractTextFromData(viewList[idx]);
+                copyTextHandler(text, "대사가 복사되었습니다.", text.substring(0, 50) + "...");
+                
+                if (blockEl) {
+                    blockEl.classList.add("copied");
+                    setTimeout(() => blockEl.classList.remove("copied"), 800);
                 }
             }
+            lastActionIdx = idx;
         });
 
-        const scrollToId = (id) => {
+       const scrollToId = (id) => {
             window.history.pushState(null, null, `#${id}`);
             const el = document.getElementById(id);
-            if (el) {
-                el.scrollIntoView({behavior: 'smooth', block: 'start'});
-            } else {
-                applyFilters(id);
-            }
+            if (el) el.scrollIntoView({behavior: 'auto', block: 'start'});
+            else applyFilters(id);
         };
 
         const buildToC = () => {
@@ -645,7 +653,7 @@
                 document.getElementById("toc-sidebar").classList.remove("open");
                 document.getElementById("toc-overlay").classList.remove("open");
                 const id = a.getAttribute("href").substring(1);
-                scrollToId(id);
+                showLoader("이동 중...", () => scrollToId(id));
             }));
         };
 
