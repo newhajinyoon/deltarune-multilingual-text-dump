@@ -95,6 +95,7 @@
         .msg-actions button:hover::after { opacity: 1; margin-left: 12px; }
 
         .msg-group.copied { background: rgba(76, 175, 80, 0.15); border-left-color: var(--copy-color); }
+        .msg-group.shift-highlight { background: rgba(135, 206, 235, 0.25) !important; border-left-color: var(--accent-color) !important; transition: none; }
 
         #toc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
         #toc-overlay.open { display: block; }
@@ -412,6 +413,7 @@
             document.getElementById("search-count").innerText = term ? `검색 결과: ${matchCount}건` : "";
 
             viewList = [];
+            lastActionIdx = -1;
             let lastChap = null, lastGroup = null;
             
             matchedMsgs.forEach(item => {
@@ -566,6 +568,29 @@
             document.body.removeChild(ta);
         };
 
+        let isShiftDown = false;
+        let currentHoverIdx = -1;
+
+        const updateShiftHighlight = () => {
+            document.querySelectorAll('.msg-group.shift-highlight').forEach(el => el.classList.remove('shift-highlight'));
+            if (!isShiftDown || lastActionIdx === -1 || currentHoverIdx === -1) return;
+            const start = Math.min(lastActionIdx, currentHoverIdx);
+            const end = Math.max(lastActionIdx, currentHoverIdx);
+            document.querySelectorAll('.msg-group').forEach(el => {
+                const idx = parseInt(el.dataset.idx);
+                if (idx >= start && idx <= end) el.classList.add('shift-highlight');
+            });
+        };
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Shift') { isShiftDown = true; updateShiftHighlight(); } });
+        document.addEventListener('keyup', (e) => { if (e.key === 'Shift') { isShiftDown = false; updateShiftHighlight(); } });
+        window.addEventListener('blur', () => { isShiftDown = false; updateShiftHighlight(); });
+        
+        document.getElementById("textboxes").addEventListener('mouseover', (e) => {
+            const group = e.target.closest('.msg-group');
+            if (group) { currentHoverIdx = parseInt(group.dataset.idx); updateShiftHighlight(); }
+        });
+
         document.getElementById("textboxes").addEventListener("click", (e) => {
             const contextBtn = e.target.closest(".jump-context-btn");
             if (contextBtn) {
@@ -602,16 +627,16 @@
                     }
                 }
                 
-                const startEl = document.querySelector(`.msg-group[data-idx="${start}"]`);
-                const endEl = document.querySelector(`.msg-group[data-idx="${end}"]`);
-                if (startEl) { startEl.classList.add("copied"); setTimeout(() => startEl.classList.remove("copied"), 800); }
-                if (endEl && endEl !== startEl) { endEl.classList.add("copied"); setTimeout(() => endEl.classList.remove("copied"), 800); }
+                document.querySelectorAll('.msg-group.shift-highlight').forEach(el => {
+                    el.classList.remove('shift-highlight');
+                    el.classList.add('copied');
+                    setTimeout(() => el.classList.remove('copied'), 800);
+                });
                 
                 const resText = copiedLines.join('\n-----------------------\n');
                 if (copiedLines.length > 0) {
                     copyTextHandler(resText, `총 ${msgCount}개의 대사가 일괄 복사되었습니다.`, copiedLines[0].substring(0, 50) + "...");
                 }
-                
             } else {
                 const text = extractTextFromData(viewList[idx]);
                 copyTextHandler(text, "대사가 복사되었습니다.", text.substring(0, 50) + "...");
@@ -622,6 +647,7 @@
                 }
             }
             lastActionIdx = idx;
+            if (isShiftDown) updateShiftHighlight();
         });
 
        const scrollToId = (id) => {
