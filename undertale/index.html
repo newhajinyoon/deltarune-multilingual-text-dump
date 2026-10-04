@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>언더테일 문자열 비교기</title>
+
+<script src="speakers.js"></script>
+
+<style>
+@font-face { font-family: "UT Sans";     src: url("fonts/즈샌16 (공통).ttf") format("truetype"); }
+@font-face { font-family: "UT Papyrus";  src: url("fonts/스루피파16 (1.08).ttf") format("truetype"); }
+@font-face { font-family: "UT Dialogue"; src: url("fonts/Gyeolui16.ttf") format("truetype"); }
+@font-face { font-family: "UT Bubble";   src: url("fonts/언텔대사창16.ttf") format("truetype"); }
+
+@font-face { font-family: "JA Default";  src: url("fonts/JF-Dot-Shinonome-14-Regular.ttf") format("truetype"); }
+@font-face { font-family: "JA Sans";     src: url("fonts/HappyRuika.ttf") format("truetype"); }
+@font-face { font-family: "JA Papyrus";  src: url("fonts/TanukiMagic.ttf") format("truetype"); }
+
+:root { 
+  --bg: #000000; 
+  --line: #333333; 
+  --ink: #ffffff; 
+  --dim: #888888; 
+  --accent: #ffff00;
+  --cols: 3;
+  --scale: 1;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, "Malgun Gothic", sans-serif; overflow-y: scroll; }
+
+header { 
+  position: sticky; top: 0; z-index: 10; background: rgba(17, 17, 17, 0.95); border-bottom: 1px solid var(--line); 
+  padding: 12px 16px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; backdrop-filter: blur(4px);
+}
+h1 { font-size: 16px; font-weight: normal; font-family: "UT Sans", sans-serif; margin: 0; color: var(--ink); letter-spacing: 1px; }
+
+input[type=search] { 
+  flex: 1; min-width: 180px; max-width: 350px; background: #000; color: #fff; 
+  border: 1px solid var(--dim); border-radius: 4px; padding: 6px 12px; font: inherit; transition: border 0.2s;
+}
+input[type=search]:focus { outline: none; border-color: var(--accent); }
+
+.controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.lang-toggles { display: flex; gap: 12px; font-size: 13px; color: var(--dim); }
+.lang-toggles label { display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; transition: color 0.2s; }
+.lang-toggles label:hover { color: #fff; }
+.lang-toggles input[type=checkbox] { cursor: pointer; accent-color: var(--accent); width: 14px; height: 14px; margin: 0; }
+
+.slider-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dim); }
+.slider-wrap input[type=range] { cursor: pointer; accent-color: var(--accent); width: 100px; }
+
+.sel { background:#000; color:var(--dim); border:1px solid var(--line); border-radius:4px; padding:5px 8px; font:inherit; font-size:13px; max-width:180px; cursor:pointer; transition:border .2s,color .2s; }
+.sel:hover { color:#fff; }
+.sel:focus { outline:none; border-color:var(--accent); color:#fff; }
+.sel.on { color:var(--accent); border-color:var(--accent); }
+.count { color: var(--dim); margin-left: auto; font-size: 12px; font-family: monospace; }
+
+.col-headers { 
+  display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 12px; 
+  position: sticky; top: var(--hh, 58px); z-index: 9; background: #000; padding: 10px 16px 6px; 
+  border-bottom: 1px solid var(--line); font-size: 12px; color: var(--dim); font-weight: bold;
+}
+
+main { padding: 0 16px 40px; }
+
+.row { padding: 16px 0; border-bottom: 1px solid #1a1a1a; cursor: pointer; transition: background 0.1s; user-select: none; }
+.row:hover { background-color: rgba(255, 255, 255, 0.08); }
+.row.highlight { background-color: rgba(20, 169, 255, 0.2); }
+.row.copied { animation: flash 0.5s ease-out; }
+
+@keyframes flash {
+  0% { background-color: rgba(20, 169, 255, 0.5); }
+  100% { background-color: transparent; }
+}
+
+.key { font: 11px/1.4 ui-monospace, Consolas, monospace; color: var(--dim); margin-bottom: 8px;
+       display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; }
+.k { opacity: .55; pointer-events: none; }
+
+.meta { display: flex; flex-wrap: wrap; align-items: baseline; }
+.meta > * + *::before { content: "·"; margin: 0 8px; color: #333; text-decoration: none; display: inline-block; }
+.m { cursor: pointer; transition: color .15s; text-decoration: none; position: relative; z-index: 2; }
+.m:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.m.spk  { color: var(--accent); opacity: .85; }
+.m.spk.ambig { color: var(--dim); font-style: italic; }
+.m.none { color: #444; cursor: default; }
+.m.none:hover { color: #444; text-decoration: none; }
+.m.area { color: #aaa; }
+.m.room { color: #666; }
+.more { color: #444; cursor: help; position: relative; z-index: 2;}
+.note { font-size: 11px; color: #666; margin: -2px 0 8px; font-family: ui-monospace, Consolas, monospace; pointer-events: none; }
+.note::before { content: "※ "; color: #444; }
+
+.boxes { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 12px; pointer-events: none; }
+.boxes > * { pointer-events: auto; user-select: text; }
+
+.box { 
+  background: #000; color: #fff; border: 2px solid #fff; 
+  padding: calc(12px * var(--scale)) calc(14px * var(--scale));
+  white-space: pre-wrap; overflow-wrap: anywhere; 
+  font-size: calc(15px * var(--scale)); line-height: 1.6; 
+}
+
+.box.sans    { font-family: "UT Sans", "UT Dialogue", sans-serif; }
+.box.papyrus { font-family: "UT Papyrus", "UT Dialogue", sans-serif; text-transform: uppercase; }
+.box.dtm     { font-family: "UT Dialogue", "Malgun Gothic", monospace; }
+
+.box.is-bubble { 
+  background: #fff; color: #000; border: none; 
+  border-radius: calc(12px * var(--scale)); 
+  font-family: "UT Bubble", "Malgun Gothic", sans-serif; 
+}
+.box.is-bubble.sans    { font-family: "UT Sans", "UT Dialogue", sans-serif; }
+.box.is-bubble.papyrus { font-family: "UT Papyrus", "UT Dialogue", sans-serif; }
+
+.lang-ja .box.dtm, 
+.lang-ja .box.is-bubble { font-family: "JA Default", sans-serif; }
+.lang-ja .box.sans      { font-family: "JA Sans", sans-serif; }
+.lang-ja .box.is-bubble.sans { font-family: "JA Sans", sans-serif; }
+.lang-ja .box.is-bubble.papyrus { font-family: "JA Papyrus", sans-serif; }
+.lang-ja .box.papyrus   { 
+  font-family: "JA Papyrus", sans-serif; 
+  writing-mode: vertical-rl;
+  line-height: 1.8;
+  overflow-x: auto;
+}
+
+.red{color:#f00}.yellow{color:#ff0}.lightblue{color:#14a9ff}.blue{color:#2a2aff}.green{color:#0f0}.orange{color:#ffa040}.purple{color:#f0f}
+.is-bubble .red, .is-bubble .yellow, .is-bubble .lightblue, .is-bubble .blue, .is-bubble .green, .is-bubble .orange, .is-bubble .purple {
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+body.hide-en .lang-en, body.hide-ko .lang-ko, body.hide-ja .lang-ja { display: none !important; }
+
+#sentinel { height: 10px; margin-top: 20px; }
+.msg { text-align: center; padding: 40px 16px; color: var(--dim); }
+
+#toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: #14a9ff; color: #000; padding: 12px 24px; border-radius: 30px;
+  font-size: 14px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  opacity: 0; visibility: hidden; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 9999;
+  pointer-events: none;
+}
+#toast.show { opacity: 1; visibility: visible; bottom: 40px; }
+
+@media (max-width: 850px) {
+  .col-headers { display: none; }
+  :root { --cols: 1 !important; }
+  .boxes > div::before { content: attr(data-l); display: block; color: var(--accent); font-size: calc(11px * var(--scale)); margin-bottom: 4px; }
+  header { gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>문자열 비교기</h1>
+  <input type="search" id="q" placeholder="검색  (key: room: area: who: 접두어 가능)" disabled>
+  
+  <div class="controls">
+    <div class="lang-toggles">
+      <label><input type="checkbox" value="en" checked id="chk-en"> EN</label>
+      <label><input type="checkbox" value="ko" checked id="chk-ko"> KO</label>
+      <label><input type="checkbox" value="ja" checked id="chk-ja"> JA</label>
+    </div>
+    <select id="who"  class="sel" title="화자 (textdump 기준)" disabled><option value="">화자</option></select>
+    <select id="area" class="sel" title="지역 (textdump.csv 기준)" disabled><option value="">지역</option></select>
+    <div class="slider-wrap">
+      크기 <input type="range" id="fontSize" min="0.6" max="2.0" step="0.1" value="1.0" title="텍스트 및 박스 크기 조절">
+    </div>
+  </div>
+  
+  <span class="count" id="cnt">0 / 0</span>
+</header>
+
+<div class="col-headers">
+  <div class="lang-en">English</div>
+  <div class="lang-ko">한국어</div>
+  <div class="lang-ja">日本語</div>
+</div>
+
+<main>
+  <div id="list"><div class="msg" id="st">데이터를 불러오는 중입니다...</div></div>
+  <div id="sentinel"></div>
+</main>
+
+<div id="toast">복사되었습니다!</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const PAGE_SIZE = 50; 
+const LANGS = ["en", "ko", "ja"]; 
+const NAMES = { en: "English", ko: "한국어", ja: "日本語" };
+const COLORS = { W:"", X:"", R:"red", Y:"yellow", L:"lightblue", B:"blue", G:"green", O:"orange", P:"purple" };
+
+const SANS_SET = typeof SANS !== "undefined" ? SANS : new Set();
+const PAP_SET  = typeof PAP  !== "undefined" ? PAP  : new Set();
+
+const SPK_NAMES = typeof SPEAKER_NAMES !== "undefined" ? SPEAKER_NAMES : [];
+const SPK_MAP   = typeof SPEAKER       !== "undefined" ? SPEAKER       : {};
+const spkOf = k => { const v = SPK_MAP[k]; return v === undefined ? [] : [].concat(v).map(i => SPK_NAMES[i]); };
+
+const AREAS = typeof AREA_NAMES !== "undefined" ? AREA_NAMES : [];
+const ROOMS = typeof ROOM_NAMES !== "undefined" ? ROOM_NAMES : [];
+const NOTES = typeof NOTE_NAMES !== "undefined" ? NOTE_NAMES : [];
+const PLC   = typeof PLACE      !== "undefined" ? PLACE      : {};
+const placeOf = k => {
+  const v = PLC[k]; if (!v) return { areas: [], rooms: [], note: "" };
+  return { areas: v[0].map(i => AREAS[i]), rooms: v[1].map(i => ROOMS[i]), note: v[2] >= 0 ? NOTES[v[2]] : "" };
+};
+const escA = s => esc(s).replace(/"/g, "&quot;");
+
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+const plain = t => t
+  .replace(/\\[EFMT]./g, "")      
+  .replace(/\\z./g, "")           
+  .replace(/\\\[[^\]]*\]/g, "")   
+  .replace(/\\[A-Za-z]/g, "")     
+  .replace(/\^\d/g, "")           
+  .replace(/[&#]/g, "\n")         
+  .replace(/\/\*?%*|%+/g, "");    
+
+function render(t) {
+  let out = "", color = "";
+  const setColor = c => { if (c === color) return; if (color) out += "</span>"; if (c) out += `<span class="${c}">`; color = c; };
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (c === "\\") {
+      const n = t[i+1];
+      if (n in COLORS) { setColor(COLORS[n]); i += 1; }
+      else if ("EFMT".includes(n)) i += 2;
+      else if (n === "z") { out += "∞"; i += 2; }
+      else if (n === "[") { const e = t.indexOf("]", i); if (e > 0) { out += esc(t.slice(i+2, e)); i = e; } else out += c; }
+      else if (n === "C") i += 1;
+      else out += c;
+    }
+    else if (c === "/") { if (t[i+1] === "*") i += 1; }
+    else if (c === "&" || c === "#") out += "\n";
+    else if (c === "^") { if (/\d/.test(t[i+1] || "")) i += 1; }
+    else if (c === "%") {}
+    else out += esc(c);
+  }
+  if (color) out += "</span>";
+  return out;
+}
+
+let L = {}, KEYS = [], hits = [], page = 0, idx = {};
+let lastCopyIdx = -1;
+let toastTimer = null;
+let currentHoverIdx = -1;
+let shiftPressed = false;
+
+const hay = k => idx[k] || (idx[k] = (k + "\n" + LANGS.map(l => plain(L[l][k] || "")).join("\n")).toLowerCase());
+
+function updateHighlight() {
+  if (lastCopyIdx === -1 || currentHoverIdx === -1 || !shiftPressed) {
+    document.querySelectorAll(".row.highlight").forEach(el => el.classList.remove("highlight"));
+    return;
+  }
+  const s = Math.min(lastCopyIdx, currentHoverIdx);
+  const e_idx = Math.max(lastCopyIdx, currentHoverIdx);
+  document.querySelectorAll(".row").forEach(el => {
+    const i = parseInt(el.dataset.index, 10);
+    el.classList.toggle("highlight", i >= s && i <= e_idx);
+  });
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Shift") {
+    shiftPressed = true;
+    updateHighlight();
+  }
+});
+
+document.addEventListener("keyup", e => {
+  if (e.key === "Shift") {
+    shiftPressed = false;
+    updateHighlight();
+  }
+});
+
+function filter() {
+  const q = $("q").value.trim().toLowerCase();
+  const m = q.match(/^(key|room|area|who):\s*(.*)$/), field = m && m[1], n = m ? m[2] : q;
+  const has = (arr, x) => arr.some(v => v.toLowerCase().includes(x));
+  hits = !n ? KEYS : KEYS.filter(k =>
+      field === "key"  ? k.toLowerCase().includes(n)
+    : field === "room" ? has(placeOf(k).rooms, n)
+    : field === "area" ? has(placeOf(k).areas, n)
+    : field === "who"  ? has(spkOf(k), n)
+    : hay(k).includes(n));
+  const who = $("who").value, area = $("area").value;
+  if (who)  hits = hits.filter(k => who  === "__none__" ? !spkOf(k).length : spkOf(k).includes(who));
+  if (area) hits = hits.filter(k => area === "__none__" ? !placeOf(k).areas.length : placeOf(k).areas.includes(area));
+  $("who").classList.toggle("on", !!who); $("area").classList.toggle("on", !!area);
+  
+  page = 0; 
+  lastCopyIdx = -1;
+  currentHoverIdx = -1;
+  updateHighlight();
+
+  $("list").replaceChildren(); 
+  $("cnt").textContent = `${hits.length.toLocaleString()} / ${KEYS.length.toLocaleString()}`;
+  
+  if (!hits.length) { 
+    $("list").innerHTML = '<div class="msg">검색 결과가 없습니다.</div>'; 
+    return; 
+  }
+  loadMore();
+}
+
+function loadMore() {
+  if (page * PAGE_SIZE >= hits.length) return;
+  
+  const frag = document.createDocumentFragment();
+  const slice = hits.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  
+  for (let i = 0; i < slice.length; i++) {
+    const k = slice[i];
+    const rowIdx = page * PAGE_SIZE + i;
+    
+    const row = document.createElement("section"); 
+    row.className = "row";
+    row.dataset.index = rowIdx;
+    
+    const sp = spkOf(k), pl = placeOf(k);
+    const spk = !sp.length ? '<span class="m none">미분류</span>'
+      : sp.length === 1 ? `<a class="m spk" data-who="${escA(sp[0])}">${esc(sp[0])}</a>`
+      : `<span class="m spk ambig" title="${escA(sp.join(" / "))}">${esc(sp[0])} 외 ${sp.length - 1}</span>`;
+    const area = pl.areas.map(a => `<a class="m area" data-area="${escA(a)}">${esc(a)}</a>`).join("");
+    const isBattle = pl.rooms.some(r => /battle/i.test(r));
+    const MAXR = 2;
+    const room = pl.rooms.slice(0, MAXR).map(r => `<a class="m room" data-room="${escA(r)}">${esc(r.replace(/^room_/, ""))}</a>`).join("")
+      + (pl.rooms.length > MAXR ? `<span class="more" title="${escA(pl.rooms.join("\n"))}">+${pl.rooms.length - MAXR}</span>` : "");
+    row.innerHTML = `<div class="key" title="클릭하여 복사"><span class="k">${esc(k)}</span><span class="meta">${spk}${area}${room}</span></div>`
+      + (pl.note ? `<div class="note">${esc(pl.note)}</div>` : "");
+    
+    const bx = document.createElement("div"); 
+    bx.className = "boxes";
+    
+    for (const l of LANGS) {
+      const w = document.createElement("div");
+      w.className = `lang-${l}`;
+      w.dataset.l = NAMES[l];
+      
+      const text = L[l][k] || "";
+      const p = plain(text).trim(); 
+      
+      const hasAsterisk = /^[\*＊]/.test(p);
+
+      const face = SANS_SET.has(k) ? "sans" : PAP_SET.has(k) ? "papyrus" : "";
+      let fontCls = face || "dtm";
+      if (isBattle && !hasAsterisk) fontCls = face ? `is-bubble ${face}` : "is-bubble";
+
+      const b = document.createElement("div"); 
+      b.className = `box ${fontCls}`;
+      b.innerHTML = render(text); 
+      
+      w.appendChild(b); 
+      bx.appendChild(w);
+    }
+    
+    row.appendChild(bx); 
+    frag.appendChild(row);
+  }
+  
+  $("list").appendChild(frag);
+  page++;
+  updateHighlight();
+}
+
+const observer = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) loadMore();
+}, { rootMargin: "400px" });
+
+LANGS.forEach(lang => {
+  $(`chk-${lang}`).addEventListener('change', (e) => {
+    document.body.classList.toggle(`hide-${lang}`, !e.target.checked);
+    const activeCount = LANGS.filter(l => $(`chk-${l}`).checked).length;
+    document.documentElement.style.setProperty('--cols', Math.max(1, activeCount));
+  });
+});
+
+$("fontSize").addEventListener("input", (e) => {
+  document.documentElement.style.setProperty('--scale', e.target.value);
+});
+
+function showToast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function ready(data) {
+  L = data; 
+  KEYS = Object.keys(L.en);
+  
+  const q = $("q"); 
+  q.disabled = false; 
+  q.addEventListener("input", (() => { let t; return () => { clearTimeout(t); t = setTimeout(filter, 200); }; })());
+  
+  const cnt = {}; let none = 0;
+  for (const k of KEYS) { const sp = spkOf(k); if (!sp.length) none++; sp.forEach(n => cnt[n] = (cnt[n] || 0) + 1); }
+  const who = $("who");
+  who.insertAdjacentHTML("beforeend", `<option value="__none__">(미분류) ${none}</option>` +
+    Object.entries(cnt).sort((a, b) => b[1] - a[1]).map(([n, c]) => `<option value="${esc(n)}">${esc(n)} (${c})</option>`).join(""));
+  who.disabled = false;
+  who.addEventListener("change", filter);
+
+  const ac = {}; let anone = 0;
+  for (const k of KEYS) { const a = placeOf(k).areas; if (!a.length) anone++; a.forEach(x => ac[x] = (ac[x] || 0) + 1); }
+  const area = $("area");
+  area.insertAdjacentHTML("beforeend", AREAS.map(a => `<option value="${escA(a)}">${esc(a)} (${ac[a] || 0})</option>`).join("")
+    + `<option value="__none__">(없음) ${anone}</option>`);
+  area.disabled = false;
+  area.addEventListener("change", filter);
+
+  $("list").addEventListener("mousemove", e => {
+    const row = e.target.closest(".row");
+    const newIdx = row ? parseInt(row.dataset.index, 10) : -1;
+    if (currentHoverIdx !== newIdx) {
+      currentHoverIdx = newIdx;
+      updateHighlight();
+    }
+  });
+
+  $("list").addEventListener("mouseleave", () => {
+    currentHoverIdx = -1;
+    updateHighlight();
+  });
+
+  $("list").addEventListener("mousedown", e => {
+    if (e.shiftKey) {
+      e.preventDefault();
+    }
+  });
+
+  $("list").addEventListener("click", e => {
+    const filterBtn = e.target.closest("[data-who],[data-area],[data-room]"); 
+    if (filterBtn) {
+      if (filterBtn.dataset.who  !== undefined) $("who").value  = filterBtn.dataset.who;
+      if (filterBtn.dataset.area !== undefined) $("area").value = filterBtn.dataset.area;
+      if (filterBtn.dataset.room !== undefined) $("q").value = "room:" + filterBtn.dataset.room;
+      filter(); window.scrollTo({ top: 0 });
+      return;
+    }
+
+    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+
+    if (!e.shiftKey && window.getSelection().type === "Range") {
+      const sel = window.getSelection();
+      if (sel.toString().trim().length > 0 && e.target.closest('.box')) {
+        return;
+      }
+    }
+
+    const row = e.target.closest(".row");
+    if (!row) return;
+
+    const currIdx = parseInt(row.dataset.index, 10);
+    if (isNaN(currIdx)) return;
+
+    const activeLangs = LANGS.filter(l => $(`chk-${l}`).checked);
+    if (activeLangs.length === 0) return;
+
+    let startIdx = currIdx;
+    let endIdx = currIdx;
+
+    if (e.shiftKey && lastCopyIdx !== -1) {
+      startIdx = Math.min(currIdx, lastCopyIdx);
+      endIdx = Math.max(currIdx, lastCopyIdx);
+    }
+
+    let copiedDataArr = [];
+    const isMultiLang = activeLangs.length > 1;
+
+    for (let i = startIdx; i <= endIdx; i++) {
+      const k = hits[i];
+      if (!k) continue;
+
+      let rowStringChunks = [];
+      if (startIdx !== endIdx) rowStringChunks.push(`[ Key: ${k} ]`);
+
+      for (const l of activeLangs) {
+        const text = plain(L[l][k] || "").trim();
+        if (!text) continue;
+        if (isMultiLang) rowStringChunks.push(`[${NAMES[l]}]\n${text}`);
+        else rowStringChunks.push(text);
+      }
+      if (rowStringChunks.length > 0) copiedDataArr.push(rowStringChunks.join("\n\n"));
+    }
+
+    if (copiedDataArr.length > 0) {
+      const finalCopyString = copiedDataArr.join("\n\n" + "-".repeat(30) + "\n\n");
+      navigator.clipboard.writeText(finalCopyString).then(() => {
+        const count = endIdx - startIdx + 1;
+        showToast(count > 1 ? `${count}개 항목이 복사되었습니다!` : "복사되었습니다!");
+      });
+      
+      document.querySelectorAll(".row").forEach(el => {
+        const i = parseInt(el.dataset.index, 10);
+        if (i >= startIdx && i <= endIdx) {
+          el.classList.remove("highlight");
+          el.classList.add("copied");
+          setTimeout(() => el.classList.remove("copied"), 500);
+        }
+      });
+    }
+
+    if (window.getSelection) {
+      window.getSelection().removeAllRanges();
+    }
+
+    lastCopyIdx = currIdx;
+    currentHoverIdx = currIdx;
+    updateHighlight();
+  });
+
+  new ResizeObserver(() => document.documentElement.style.setProperty("--hh", document.querySelector("header").offsetHeight + "px"))
+    .observe(document.querySelector("header"));
+
+  $("st")?.remove(); 
+  filter();
+  observer.observe($("sentinel"));
+}
+
+Promise.all(LANGS.map(l => fetch(`lang/lang_${l}.json`).then(r => { if (!r.ok) throw 0; return r.json(); })))
+  .then(arr => ready({ en:arr[0], ko:arr[1], ja:arr[2] }))
+  .catch(() => {
+    $("st").innerHTML = '<button class="file-btn" id="pick">lang_en, lang_ko, lang_ja 파일 선택</button><input type="file" id="fi" accept=".json" multiple hidden>';
+    $("pick").onclick = () => $("fi").click();
+    $("fi").onchange = async e => {
+      const d = {};
+      for (const f of e.target.files) { 
+        const m = f.name.match(/lang_(en|ko|ja)/); 
+        if (m) d[m[1]] = JSON.parse(await f.text()); 
+      }
+      if (LANGS.every(l => d[l])) ready(d); else $("st").innerHTML = "<p>3개 언어 파일을 모두 선택해 주세요.</p>";
+    };
+  });
+</script>
+</body>
+</html>
