@@ -1,0 +1,238 @@
+# clean_portraits.py
+# 사용법: 이 파일을 스프라이트 PNG가 들어있는 폴더에 넣고 실행 (python clean_portraits.py)
+# - 이 파일이 있는 폴더의 .png 파일만 대상 (하위 폴더, 다른 확장자는 절대 건드리지 않음)
+# - 옐로우에서 쓰는 초상화 스프라이트가 아닌 PNG는 삭제 (이름_0.png 같은 프레임 파일은 보존)
+import os, re, sys
+
+KEEP = set("""
+flowey_evil
+flowey_grin
+flowey_nice
+flowey_niceside
+flowey_pissed
+flowey_plain
+flowey_plains
+flowey_sad
+flowey_smirk
+flowey_wink
+flowey_worried
+flowey_worriedside
+spr_angie_head
+spr_angie_head_smile
+spr_angie_head_unamused
+spr_chujin_anxious
+spr_chujin_anxious_stressed
+spr_chujin_default_idle
+spr_chujin_down_stressed
+spr_chujin_down_stressed_2
+spr_chujin_forward_stressed
+spr_chujin_glasses_stressed
+spr_chujin_look_left
+spr_chujin_look_right
+spr_chujin_look_right_finger_down
+spr_chujin_looking_down
+spr_chujin_lower_head
+spr_chujin_lower_head_lower
+spr_chujin_lower_head_stressed
+spr_collisionbox
+spr_dalv_head_angry
+spr_dalv_head_confused
+spr_dalv_head_content
+spr_dalv_head_content_2
+spr_dalv_head_dead
+spr_dalv_head_downer
+spr_dalv_head_happy
+spr_dalv_head_moderate
+spr_dalv_head_regular
+spr_dalv_head_sad
+spr_dalv_head_sad_side
+spr_dalv_head_sad_side_2
+spr_dalv_head_sad_sleepy
+spr_dalv_head_sadder
+spr_dalv_head_sleepy
+spr_evil_flowey_2_talk
+spr_evil_flowey_surprised
+spr_evil_flowey_talk
+spr_flowey_angry
+spr_flowey_disappointed
+spr_flowey_grin
+spr_flowey_grin_forward
+spr_flowey_meh
+spr_flowey_nice
+spr_flowey_nice_side
+spr_flowey_plain
+spr_flowey_plain_side
+spr_flowey_snarky
+spr_gilbert_head
+spr_gilbert_head_blush
+spr_gilbert_head_sweat
+spr_martlet_head_angrier
+spr_martlet_head_angry
+spr_martlet_head_confounded
+spr_martlet_head_confused
+spr_martlet_head_content
+spr_martlet_head_determined
+spr_martlet_head_disappointed
+spr_martlet_head_downer
+spr_martlet_head_happy
+spr_martlet_head_melancholic
+spr_martlet_head_moderate
+spr_martlet_head_nervous
+spr_martlet_head_nervous_smile
+spr_martlet_head_questioning
+spr_martlet_head_regular
+spr_martlet_head_sad
+spr_martlet_head_shocked
+spr_martlet_head_smirk
+spr_martlet_head_spook
+spr_martlet_head_surprised
+spr_martlet_head_suspicious
+spr_martlet_head_suspiciouser
+spr_martlet_head_unamused
+spr_martlet_head_wink
+spr_martlet_head_wondering
+spr_portrait_ace_concealed
+spr_portrait_ace_hand
+spr_portrait_ace_normal
+spr_portrait_ace_smile
+spr_portrait_ace_stern
+spr_portrait_alphys_default
+spr_portrait_alphys_determined
+spr_portrait_alphys_nervous
+spr_portrait_asgore_ashamed
+spr_portrait_asgore_closed_eyes
+spr_portrait_asgore_doubtful
+spr_portrait_asgore_melancholic
+spr_portrait_asgore_regular
+spr_portrait_asgore_sad
+spr_portrait_asgore_sadder
+spr_portrait_asgore_saddest
+spr_portrait_asgore_saddester
+spr_portrait_asgore_surprised
+spr_portrait_axis_confused
+spr_portrait_axis_damaged
+spr_portrait_axis_happy
+spr_portrait_axis_love
+spr_portrait_axis_normal
+spr_portrait_axis_shadow
+spr_portrait_axis_wut
+spr_portrait_ceroba_alt
+spr_portrait_ceroba_angry
+spr_portrait_ceroba_angry_alt
+spr_portrait_ceroba_closed_eyes
+spr_portrait_ceroba_confounded
+spr_portrait_ceroba_default
+spr_portrait_ceroba_disapproving
+spr_portrait_ceroba_furious
+spr_portrait_ceroba_happy
+spr_portrait_ceroba_irked
+spr_portrait_ceroba_lostit
+spr_portrait_ceroba_mourning
+spr_portrait_ceroba_muttering
+spr_portrait_ceroba_nervous
+spr_portrait_ceroba_nervous_smile
+spr_portrait_ceroba_neutral
+spr_portrait_ceroba_pensive
+spr_portrait_ceroba_smile
+spr_portrait_ceroba_smile_alt
+spr_portrait_ceroba_snarky
+spr_portrait_ceroba_sorrowful
+spr_portrait_ceroba_surprised
+spr_portrait_ceroba_unamused
+spr_portrait_ceroba_wailing
+spr_portrait_chujin_big_sad
+spr_portrait_chujin_content
+spr_portrait_chujin_down_talk
+spr_portrait_chujin_eye_smirk
+spr_portrait_chujin_neutral
+spr_portrait_chujin_sad_eye
+spr_portrait_chujin_sad_eye_smirk
+spr_portrait_chujin_smirk
+spr_portrait_ed_mad
+spr_portrait_ed_mutter
+spr_portrait_ed_normal
+spr_portrait_ed_smile
+spr_portrait_fchujin_bruh
+spr_portrait_fchujin_happy
+spr_portrait_fchujin_serious_down
+spr_portrait_fchujin_surprised
+spr_portrait_fchujin_surprised_talk
+spr_portrait_fchujin_talk_glasses
+spr_portrait_fchujin_talk_serious
+spr_portrait_fchujin_talk_smile
+spr_portrait_kanako_eyes_closed_happy
+spr_portrait_kanako_happy
+spr_portrait_kanako_hopeful
+spr_portrait_kanako_neutral
+spr_portrait_kanako_pensive_2
+spr_portrait_kanako_pout
+spr_portrait_kanako_sad_1
+spr_portrait_kanako_sad_2
+spr_portrait_kanako_shot
+spr_portrait_mooch_crying
+spr_portrait_mooch_happy
+spr_portrait_mooch_nervous
+spr_portrait_mooch_normal
+spr_portrait_mooch_smile
+spr_portrait_mooch_smirk
+spr_portrait_mooch_smug
+spr_portrait_mooch_surprised
+spr_portrait_moray_disbelief
+spr_portrait_moray_downer
+spr_portrait_moray_normal
+spr_portrait_moray_plain
+spr_portrait_moray_shaded
+spr_portrait_moray_sweat
+spr_portrait_starlo_angry
+spr_portrait_starlo_blush
+spr_portrait_starlo_disappointed
+spr_portrait_starlo_distracted
+spr_portrait_starlo_embarassed
+spr_portrait_starlo_embarassed_smile
+spr_portrait_starlo_flustered
+spr_portrait_starlo_hidden
+spr_portrait_starlo_hurt
+spr_portrait_starlo_nohat_happy
+spr_portrait_starlo_nohat_normal
+spr_portrait_starlo_nohat_sad
+spr_portrait_starlo_nohat_smile
+spr_portrait_starlo_normal
+spr_portrait_starlo_plain
+spr_portrait_starlo_point
+spr_portrait_starlo_sad
+spr_portrait_starlo_serious
+spr_portrait_starlo_smile
+spr_portrait_starlo_smirk
+spr_portrait_starlo_surprised
+spr_portrait_starlo_sweat
+toriel_normal
+toriel_shocked
+toriel_side
+waiting_for_shot
+""".split())
+
+here = os.path.dirname(os.path.abspath(__file__))
+pngs = [f for f in os.listdir(here) if f.lower().endswith(".png") and os.path.isfile(os.path.join(here, f))]
+
+def keep(f):
+    base = f[:-4]
+    cands = {base, re.sub(r"_\d+$", "", base)}
+    return any(c in KEEP for c in cands)
+
+keeps = [f for f in pngs if keep(f)]
+dels = [f for f in pngs if not keep(f)]
+print(f"폴더: {here}")
+print(f"PNG {len(pngs)}개 중 유지 {len(keeps)}개 / 삭제 {len(dels)}개")
+
+if not keeps:
+    print("유지할 파일이 하나도 없어서 중단합니다. (잘못된 폴더일 수 있음)")
+    sys.exit(1)
+if not dels:
+    print("삭제할 파일이 없습니다."); sys.exit(0)
+
+if input("삭제를 진행할까요? (y/N): ").strip().lower() != "y":
+    print("취소했습니다."); sys.exit(0)
+
+for f in dels:
+    os.remove(os.path.join(here, f))
+print(f"{len(dels)}개 삭제 완료")

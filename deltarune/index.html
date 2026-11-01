@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deltarune Text Dump</title>
+    
+    <link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgBAMAAACBVGfHAAAAD1BMVEUAAADAgiYAAACFSh3AgibGPmPhAAAAAnRSTlMAAHaTzTgAAACXSURBVCiRhZHLDYRADEN9oISt4I0rQBQAGfdf0x6AhVntxzc/OXGkSH/1yKBNDwZtqhH4E5gv27CK5Eg5OUAfQXN2kJr3pUnRZpwcLUt6S+Yl/axt5aTcb3f4rPoKSH6c/g90gAIwwKIJICQEYNUEOLhIAatU4JTLKbC0z+B9+Srp3mPpFbkCUk6f81l58we5eSnJ4H/pCVYTQjf3DYm9AAAAAElFTkSuQmCC" />
+    <script src="rendered.json.js"></script>
+    
+    <style>
+        @font-face {
+            font-family: 'Deltarune Font';
+            src: url('static/gulim-13px.ttf') format('truetype');
+            font-weight: normal; font-display: swap;
+        }
+        :root {
+            --base-font-size: 16px;
+            --bg-color: #121212; --text-color: #e0e0e0;
+            --panel-bg: #1e1e1e; --btn-bg: #2d2d2d;
+            --btn-hover: #3d3d3d; --border-color: #404040;
+            --accent-color: #5a9fd4; --copy-color: #4caf50;
+        }
+        body.light {
+            --bg-color: #fdfdfd; --text-color: #1a1a1a;
+            --panel-bg: #f0f0f0; --btn-bg: #e0e0e0;
+            --btn-hover: #d0d0d0; --border-color: #cccccc;
+            --accent-color: #005bb5; --copy-color: #2e7d32;
+        }
+        body {
+            background: var(--bg-color); color: var(--text-color);
+            font-family: sans-serif; margin: 0; line-height: 1.4em;
+            overflow-wrap: break-word; font-size: var(--base-font-size);
+        }
+
+        .intro { background: var(--panel-bg); padding: 15px 20px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        button, select, input[type="text"] {
+            background: var(--btn-bg); color: var(--text-color);
+            border: 1px solid var(--border-color); padding: 8px 12px;
+            border-radius: 6px; font-size: 0.95em; cursor: pointer;
+            transition: all 0.2s ease; outline: none;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        button:hover, select:hover { background: var(--btn-hover); border-color: var(--accent-color); }
+        input[type="text"]:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px rgba(90, 159, 212, 0.2); }
+        svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9em; }
+        
+        .menu-toggle { display: none; width: 100%; padding: 12px; font-weight: bold; }
+        .controls-wrapper { display: flex; flex-direction: column; gap: 12px; }
+        .control-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .control-group { display: flex; gap: 8px; align-items: center; background: rgba(0, 0, 0, 0.1); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .search-wrapper { position: relative; display: flex; align-items: center; }
+        .search-wrapper svg { position: absolute; left: 10px; width: 16px; height: 16px; opacity: 0.6; }
+        .search-wrapper input { padding-left: 32px; width: 220px; }
+        #search-count { font-size: 0.85em; opacity: 0.8; font-weight: bold; margin-left: 5px; color: var(--accent-color); }
+
+        html { scroll-padding-top: 140px; }
+        h1, h2, .msg-group { scroll-margin-top: 140px; }
+
+        @media (max-width: 768px) {
+            .menu-toggle { display: flex; }
+            .controls-wrapper { display: none; padding-top: 15px; }
+            .controls-wrapper.open { display: flex; }
+            .control-row, .control-group { flex-direction: column; align-items: stretch; }
+            .search-wrapper input { width: 100%; }
+        }
+
+        h1 { font-family: "Deltarune Font", Monospace; padding-left: 20px; margin: 30px 0 15px; font-size: 2em; }
+        h2 { font-family: "Deltarune Font", Monospace; padding-left: 20px; margin: 30px 0 15px; font-size: 1.4em; border-bottom: 2px solid var(--border-color); padding-bottom: 5px; display: inline-flex; align-items: center; max-width: 100%; flex-wrap: wrap; }
+        h1 a, h2 a { color: var(--text-color); text-decoration: none; }
+        .breakable { word-break: break-all; }
+        mark { background-color: rgba(255, 235, 59, 0.4); color: inherit; border-radius: 2px; padding: 0 2px; }
+
+        .jump-context-btn { display: none; background: var(--accent-color); color: #fff; border: none; padding: 4px 10px; border-radius: 20px; font-size: 0.6em; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); margin-left: 10px; }
+        .jump-context-btn svg { width: 14px; height: 14px; stroke: #fff; }
+        h2:hover .jump-context-btn { display: inline-flex; align-items: center; gap: 5px; }
+        .jump-context-btn:hover { filter: brightness(1.2); transform: scale(1.05); }
+
+        .render-chunk { }
+        
+        .msg-group { position: relative; padding-left: 45px; margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; transition: background 0.3s, border-color 0.3s; border-left: 4px solid transparent; }
+        #textboxes.grid-view .msg-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .textbox { white-space: pre-wrap; padding: 5px 0; font-family: "Deltarune Font", Monospace; }
+        .untranslated { color: #ff6b6b; background: rgba(255, 0, 0, 0.05); border-left: 4px solid #ff6b6b; padding-left: 10px; font-style: italic; }
+
+        .msg-actions { position: absolute; left: 5px; top: 5px; display: flex; flex-direction: column; gap: 6px; z-index: 10; }
+        .msg-actions button { background: transparent; border: 1px solid transparent; padding: 5px; border-radius: 4px; cursor: pointer; opacity: 0.3; }
+        .msg-actions button svg { width: 18px; height: 18px; fill: var(--text-color); stroke: none; }
+        .msg-group:hover .msg-actions button { opacity: 0.8; }
+        .msg-actions button:hover { background: var(--btn-hover); opacity: 1 !important; border-color: var(--border-color); }
+        .msg-actions button.copy-btn svg { fill: none; stroke: currentColor; }
+        
+        .msg-actions button::after { content: attr(data-tooltip); position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 8px; background: var(--text-color); color: var(--bg-color); padding: 5px 10px; border-radius: 6px; font-size: 0.85em; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s, margin-left 0.2s; font-weight: bold; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .msg-actions button:hover::after { opacity: 1; margin-left: 12px; }
+
+        .msg-group.copied { background: rgba(76, 175, 80, 0.15); border-left-color: var(--copy-color); }
+        .msg-group.shift-highlight { background: rgba(135, 206, 235, 0.25) !important; border-left-color: var(--accent-color) !important; transition: none; }
+
+        #toc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1999; display: none; backdrop-filter: blur(2px); }
+        #toc-overlay.open { display: block; }
+        #toc-sidebar { position: fixed; top: 0; left: -320px; width: 300px; height: 100vh; background: var(--panel-bg); border-right: 1px solid var(--border-color); transition: left 0.3s ease; z-index: 2000; overflow-y: hidden; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.4); box-sizing: border-box; }
+        #toc-sidebar.open { left: 0; }
+        #toc-header { padding: 20px; border-bottom: 1px solid var(--border-color); }
+        #toc-header h3 { margin: 0 0 12px 0; color: var(--text-color); }
+        #toc-search { width: 100%; box-sizing: border-box; }
+        #toc-list-container { flex: 1; overflow-y: auto; padding: 10px 20px 20px; }
+        #toc-list { list-style: none; padding: 0; margin: 0; font-size: 0.95em; }
+        #toc-list li { margin: 10px 0; }
+        #toc-list a { color: var(--text-color); text-decoration: none; opacity: 0.8; transition: all 0.2s; display: block; padding: 4px; border-radius: 4px; }
+        #toc-list a:hover { opacity: 1; color: var(--accent-color); background: rgba(90, 159, 212, 0.1); }
+        #toc-list ul { list-style: none; padding-left: 15px; border-left: 1px solid var(--border-color); margin-top: 5px; }
+
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 30px; font-size: 0.95em; font-weight: bold; opacity: 0; transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); pointer-events: none; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.3); text-align: center; max-width: 80%; }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast span { display: block; font-size: 0.8em; font-weight: normal; margin-top: 4px; opacity: 0.8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 300px; }
+
+        #top-btn { position: fixed; bottom: 25px; right: 25px; width: 45px; height: 45px; border-radius: 50%; font-size: 1.2em; display: none; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .loading { font-family: "Deltarune Font", Monospace; padding: 40px; text-align: center; font-size: 1.2em; }
+
+        #global-loader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); color:#fff; z-index:99999; align-items:center; justify-content:center; flex-direction:column; font-family:"Deltarune Font", Monospace; font-size:1.5em; backdrop-filter:blur(3px); }
+        .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,0.2); border-top-color:var(--accent-color); border-radius:50%; animation:spin 1s linear infinite; margin-bottom:15px; }
+        @keyframes spin { 100% { transform:rotate(360deg); } }
+
+        span.R{color:#ff5555} span.B{color:#5555ff} span.Y{color:#ffff55} span.G{color:#55ff55}
+        span.O{color:#ffaa55} span.A{color:#55ffff} span.S{color:#ff55ff} span.V{color:#aaffaa}
+        span.I{color:#aaccff} span.p{color:#ff8a90} span.s{color:#e2a8fc} span.a{color:#84f9ff}
+        span.y{color:#fff8a1} span.g{color:#aeffbc} span.o{color:#ffac87} span.b{color:#86a7ff}
+        body.light span.Y, body.light span.G, body.light span.A, body.light span.V, body.light span.S, body.light span.I { -webkit-text-stroke: 1px var(--text-color); paint-order: stroke fill; }
+        
+        .voiced { padding-left: 28px; position: relative; }
+        .voiced:before { content: "🔊"; position: absolute; left: 0; top: 0; font-size: 16px; opacity: 0.6; cursor: pointer; transition: opacity 0.2s; }
+        .voiced:hover:before { opacity: 1; }
+        [data-ensound], [data-jasound] { cursor: pointer; }
+        img.miniface { width: 20px; height: 20px; vertical-align: bottom; margin-right: 5px; image-rendering: pixelated; }
+    </style>
+</head>
+<body>
+    <div id="global-loader">
+        <div class="spinner"></div>
+        <span id="loader-text">이동 중...</span>
+    </div>
+
+    <div id="toc-overlay"></div>
+    <div id="toc-sidebar">
+        <div id="toc-header">
+            <h3>목차 (ToC)</h3>
+            <input type="text" id="toc-search" placeholder="🔎 목차 검색...">
+        </div>
+        <div id="toc-list-container">
+            <ul id="toc-list"></ul>
+        </div>
+    </div>
+    <div id="toast"></div>
+
+    <div class="intro">
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button id="toc-toggle-btn" title="목차 열기">
+                <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <button class="menu-toggle" id="menu-toggle">
+                <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"></path></svg> 설정 메뉴
+            </button>
+        </div>
+        
+        <div class="controls-wrapper" id="controls-wrapper" style="margin-top:10px;">
+            <div class="control-row" id="lang-controls"></div>
+            <div class="control-row">
+                <div class="control-group">
+                    <select id="chapter" name="chapter">
+                        <option value="all">모든 챕터</option>
+                        <option value="1">Chapter 1</option><option value="2">Chapter 2</option>
+                        <option value="3">Chapter 3</option><option value="4">Chapter 4</option>
+                        <option value="5">Chapter 5</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <div class="search-wrapper">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="search-box" placeholder="텍스트 검색...">
+                    </div>
+                    <label title="정규식(Regex) 사용" style="font-family: monospace; font-weight: bold; padding: 0 5px;">
+                        <input type="checkbox" id="regex-toggle"> .*
+                    </label>
+                    <span id="search-count"></span>
+                </div>
+                <div class="control-group">
+                    <button type="button" id="view-toggle" title="그리드 뷰 전환">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18" rx="1"></rect><rect x="14" y="3" width="7" height="18" rx="1"></rect></svg>
+                    </button>
+                    <div style="display:flex; gap:4px; margin-left: 8px;">
+                        <button type="button" id="font-decrease" title="폰트 축소" style="font-weight:bold; width: 36px;">A-</button>
+                        <button type="button" id="font-increase" title="폰트 확대" style="font-weight:bold; width: 36px;">A+</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <button type="button" id="light-mode-toggle" title="다크/라이트 테마">
+                        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="txt-downloads" style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.9em; margin-top:5px;"></div>
+        </div>
+    </div>
+
+    <div id="textboxes"><div class="loading">데이터를 불러오는 중입니다...</div></div>
+    
+    <button id="top-btn" title="맨 위로 가기">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+    </button>
+
+    <script type="module">
+        import * as DRData from './data.json.js';
+
+        const langsAvailable = window.availableLangs || ["en", "ja"];
+        const textData = window.rendered;
+        const displayNames = { de: "Deutsch", fr: "Français", en: "English", es: "Español", ja: "日本語", ko: "한국어", pl: "Polski", "pt-BR": "Português", ru: "Русский", zh: "中文", ar: "العربية" };
+        const langElems = {};
+        const config = { chap: 'all', langs: [] };
+        
+        const icons = {
+            link: `<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
+            copy: `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+            dl: `<svg style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><polyline points="9 15 12 18 15 15"></polyline></svg>`,
+            arrowRight: `<svg viewBox="0 0 24 24"><path d="M5 12h14"></path><polyline points="12 5 19 12 12 19"></polyline></svg>`
+        };
+
+        let masterData = [];
+        let viewList = [];
+        let lastActionIdx = -1;
+
+        const showLoader = (msg, task) => {
+            document.getElementById("loader-text").innerText = msg;
+            const loader = document.getElementById("global-loader");
+            loader.style.display = "flex";
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    try { task(); } finally { loader.style.display = "none"; }
+                });
+            });
+        };
+
+        const buildMasterData = () => {
+            for (let c = 1; c <= 5; c++) {
+                if (!textData[c]) continue;
+                for (const group in textData[c]) {
+                    for (const msgId in textData[c][group]) {
+                        const rawMsgs = textData[c][group][msgId];
+                        let searchStr = "";
+                        langsAvailable.forEach(l => {
+                            if (rawMsgs[l]) {
+                                searchStr += rawMsgs[l].replace(/\\[a-zA-Z0-9~]|\^([0-9])/g, "").replace(/<[^>]*>?/gm, '') + " ";
+                            }
+                        });
+                        masterData.push({
+                            type: 'msg', id: msgId, chap: String(c), group: group,
+                            msgs: rawMsgs, searchStr: searchStr.toLowerCase()
+                        });
+                    }
+                }
+            }
+        };
+
+        const initUI = () => {
+            const frag = document.createDocumentFragment();
+            const dlContainer = document.getElementById("txt-downloads");
+
+            langsAvailable.forEach(l => {
+                const label = document.createElement("label");
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox"; checkbox.value = l;
+                label.append(checkbox, ` ${displayNames[l] || l.toUpperCase()}`);
+                frag.appendChild(label);
+                langElems[l] = checkbox;
+                checkbox.addEventListener('change', updateState);
+
+                const a = Object.assign(document.createElement("a"), {
+                    href: `txt/DELTARUNE_${l}.txt`, target: "_blank",
+                    innerHTML: `${icons.dl} ${displayNames[l] || l.toUpperCase()}`
+                });
+                a.style.cssText = "color:var(--text-color);text-decoration:none;display:flex;align-items:center;gap:4px;";
+                dlContainer.appendChild(a);
+            });
+            document.getElementById("lang-controls").appendChild(frag);
+
+            document.getElementById("menu-toggle").addEventListener("click", () => document.getElementById("controls-wrapper").classList.toggle("open"));
+            document.getElementById("light-mode-toggle").addEventListener("click", () => {
+                const isLight = document.body.classList.toggle("light");
+                localStorage.setItem("drLightMode", isLight);
+            });
+            if (localStorage.getItem("drLightMode") === "true") document.body.classList.add("light");
+
+            let currentFont = parseInt(localStorage.getItem("drFontSize")) || 16;
+            document.documentElement.style.setProperty('--base-font-size', currentFont + 'px');
+            const updateFont = (d) => { currentFont += d; document.documentElement.style.setProperty('--base-font-size', currentFont + 'px'); localStorage.setItem("drFontSize", currentFont); };
+            document.getElementById("font-increase").addEventListener("click", () => updateFont(2));
+            document.getElementById("font-decrease").addEventListener("click", () => updateFont(-2));
+            
+            const textboxes = document.getElementById("textboxes");
+            const viewToggle = document.getElementById("view-toggle");
+            const toggleGrid = (force) => {
+                const isGrid = force ?? !textboxes.classList.contains("grid-view");
+                textboxes.classList.toggle("grid-view", isGrid);
+                localStorage.setItem("drGridView", isGrid);
+                viewToggle.style.background = isGrid ? "var(--accent-color)" : "";
+                viewToggle.style.color = isGrid ? "#fff" : "";
+            };
+            if(localStorage.getItem("drGridView") === "true") toggleGrid(true);
+            viewToggle.addEventListener("click", () => toggleGrid());
+
+            document.getElementById("top-btn").addEventListener("click", () => window.scrollTo({top:0, behavior:'smooth'}));
+            window.addEventListener("scroll", () => document.getElementById("top-btn").style.display = window.scrollY > 300 ? "flex" : "none");
+
+            document.getElementById("search-box").addEventListener("input", () => applyFilters());
+            document.getElementById("regex-toggle").addEventListener("change", () => applyFilters());
+            document.getElementById("chapter").addEventListener("change", (e) => updateState(e));
+            window.addEventListener("popstate", () => { loadState(); applyFilters(); });
+        };
+
+        const loadState = () => {
+            const params = new URLSearchParams(window.location.search);
+            config.chap = params.get("chap") || "all";
+            document.getElementById("chapter").value = config.chap;
+            const langParam = params.get('lang');
+            config.langs = langParam ? langParam.split(',') : (langsAvailable.includes('en') ? ['en'] : [langsAvailable[0]]);
+            langsAvailable.forEach(l => langElems[l] && (langElems[l].checked = config.langs.includes(l)));
+        };
+
+        const updateState = (e) => {
+            if (e?.target?.id === "chapter") config.chap = e.target.value;
+            else {
+                config.langs = langsAvailable.filter(l => langElems[l].checked);
+                if (!config.langs.length) config.langs.push(langsAvailable[0]);
+            }
+            const url = new URL(window.location.href);
+            config.chap === "all" ? url.searchParams.delete("chap") : url.searchParams.set("chap", config.chap);
+            url.searchParams.set('lang', config.langs.join(','));
+            window.history.pushState({}, '', url);
+            applyFilters();
+        };
+
+        const parseDeltaruneText = (text, msgId, chap, lang, highlightRegex) => {
+            if (!text) return "";
+            let isVoiced = false, baseSound = null, jaSound = null, colorOpen = false;
+
+            let parsed = text
+                .replace(/[&#]/g, "\n")
+                .replace(/\\V([a-zA-Z0-9])/g, (_, letter) => {
+                    if (typeof DRData !== 'undefined' && DRData.lookup_voiceclip) {
+                        const enRes = DRData.lookup_voiceclip(letter, msgId, "en");
+                        const jaRes = DRData.lookup_voiceclip(letter, msgId, "ja");
+                        const _base = Array.isArray(enRes) ? enRes[0] : enRes;
+                        const _ja = Array.isArray(jaRes) ? jaRes[0] : jaRes;
+                        if (_base) baseSound = _base;
+                        if (_ja) jaSound = _ja;
+                        if (baseSound || jaSound) isVoiced = true;
+                    }
+                    return "";
+                })
+                .replace(/\\c([A-Za-z0])/g, (_, c) => {
+                    let res = colorOpen ? "</span>" : "";
+                    if (c !== '0') { res += `<span class="${c}">`; colorOpen = true; }
+                    else colorOpen = false;
+                    return res;
+                })
+                .replace(/\\m([0-9])/g, (_, id) => {
+                    try {
+                        const kind = DRData.minifacekind(msgId, chap);
+                        const spr = DRData.minifacesprite(kind, id);
+                        return spr ? `<img class="miniface ${kind}" src="static/img/${spr}.png" alt="face">` : "";
+                    } catch(e) { return ""; }
+                })
+                .replace(/\\[METFSaOf][a-zA-Z0-9~]|\\C([0-9])|\^([0-9])/g, "");
+
+            if (colorOpen) parsed += "</span>";
+            if (highlightRegex) parsed = parsed.replace(highlightRegex, (match) => `<mark>${match}</mark>`);
+
+            let datasetStr = "";
+            if (baseSound) datasetStr += ` data-ensound="${baseSound}"`;
+            if (jaSound) datasetStr += ` data-jasound="${jaSound}"`;
+
+            return isVoiced ? `<div class="voiced" ${datasetStr} data-lang="${lang}">${parsed}</div>` : parsed;
+        };
+
+        let renderSeq = 0;
+        const applyFilters = (arg) => {
+            const jumpToId = typeof arg === 'string' ? arg : null;
+            const currentSeq = ++renderSeq;
+            const term = document.getElementById("search-box").value.toLowerCase();
+            const useRegex = document.getElementById("regex-toggle").checked;
+            
+            let searchRegex = null, highlightRegex = null;
+            if (term) {
+                try {
+                    searchRegex = useRegex ? new RegExp(term, 'i') : null;
+                    highlightRegex = useRegex ? new RegExp(`(${term})(?![^<]*>)`, 'gi') : new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})(?![^<]*>)`, 'gi');
+                } catch(e) {}
+            }
+
+            let matchCount = 0;
+            const matchedMsgs = [];
+
+            masterData.forEach(item => {
+                if (config.chap !== 'all' && item.chap !== config.chap) return;
+                let isMatch = true;
+                if (term) isMatch = searchRegex ? searchRegex.test(item.searchStr) : item.searchStr.includes(term);
+                if (isMatch) {
+                    matchedMsgs.push(item);
+                    matchCount++;
+                }
+            });
+
+            document.getElementById("search-count").innerText = term ? `검색 결과: ${matchCount}건` : "";
+
+            viewList = [];
+            lastActionIdx = -1;
+            let lastChap = null, lastGroup = null;
+            
+            matchedMsgs.forEach(item => {
+                if (item.chap !== lastChap) {
+                    viewList.push({ type: 'h1', id: item.chap, title: `Chapter ${item.chap}` });
+                    lastChap = item.chap;
+                }
+                if (item.group !== lastGroup) {
+                    const h2Title = item.group.replace(/_slash_/g, "/").replace(/_/g, '<span class="breakable">_</span>');
+                    viewList.push({ type: 'h2', id: `${item.chap}_${item.group}`, title: h2Title });
+                    lastGroup = item.group;
+                }
+                viewList.push(item);
+            });
+
+            renderVirtualDOM(currentSeq, highlightRegex, jumpToId);
+            buildToC();
+        };
+
+        const renderVirtualDOM = (seq, highlightRegex, forceScrollId = null) => {
+            const container = document.getElementById("textboxes");
+            container.innerHTML = "";
+            
+            if (viewList.length === 0) {
+                container.innerHTML = `<div class="loading">검색 결과가 없습니다.</div>`;
+                return;
+            }
+
+            const CHUNK_SIZE = 50;
+            let htmlBuffer = "";
+            
+            let forceUntilIdx = -1;
+            if (forceScrollId) {
+                forceUntilIdx = viewList.findIndex(x => x.id === forceScrollId || `msg-${x.id}` === forceScrollId);
+            }
+
+            const flushChunk = () => {
+                if (!htmlBuffer) return;
+                const chunkDiv = document.createElement("div");
+                chunkDiv.className = "render-chunk";
+                chunkDiv.innerHTML = htmlBuffer;
+                container.appendChild(chunkDiv);
+                htmlBuffer = "";
+            };
+
+            const process = (idx) => {
+                if (seq !== renderSeq) return;
+                
+                let end = Math.min(idx + CHUNK_SIZE, viewList.length);
+                if (forceScrollId && forceUntilIdx >= idx) {
+                    end = Math.min(forceUntilIdx + 20, viewList.length);
+                }
+
+                for (let i = idx; i < end; i++) {
+                    const item = viewList[i];
+                    
+                    if (item.type === 'h1') {
+                        htmlBuffer += `<h1 id="${item.id}"><a href="#${item.id}">${item.title}</a></h1>`;
+                    } else if (item.type === 'h2') {
+                        const isSearching = document.getElementById("search-box").value.trim() !== "";
+                        const contextBtn = isSearching ? `<button class="jump-context-btn" data-id="${item.id}">${icons.arrowRight} 문맥 보기</button>` : "";
+                        htmlBuffer += `<h2 id="${item.id}"><a href="#${item.id}">${item.title}</a>${contextBtn}</h2>`;
+                    } else {
+                        let groupHtml = "";
+                        config.langs.forEach(lang => {
+                            const msg = item.msgs[lang];
+                            if (msg === undefined) return;
+                            
+                            const isNull = msg === null;
+                            const className = `textbox ${lang} ${isNull ? "untranslated" : ""}`;
+                            const parsedMsg = isNull ? "[ NULL ]" : parseDeltaruneText(msg, `${item.group}_slash_${item.id}`, item.chap, lang, highlightRegex);
+                            groupHtml += `<div class="${className}" lang="${lang}">${parsedMsg}</div>`;
+                        });
+
+                        htmlBuffer += `
+                            <div class="msg-group" id="msg-${item.id}" data-idx="${i}">
+                                <div class="msg-actions">
+                                    <button class="link-btn" data-id="${item.id}" data-tooltip="링크 복사">${icons.link}</button>
+                                    <button class="copy-btn" data-idx="${i}" data-tooltip="텍스트 복사 (Shift+클릭: 범위지정)">${icons.copy}</button>
+                                </div>
+                                ${groupHtml}
+                            </div>
+                        `;
+                    }
+                }
+                flushChunk();
+
+                if (forceScrollId && forceUntilIdx >= idx && forceUntilIdx < end) {
+                    const targetId = forceScrollId;
+                    let retries = 0;
+                    const scrollTarget = () => {
+                        const el = document.getElementById(targetId);
+                        if (el) el.scrollIntoView({behavior: 'auto', block: 'start'});
+                        if (++retries < 6) setTimeout(scrollTarget, 150);
+                    };
+                    setTimeout(scrollTarget, 50);
+                    forceScrollId = null;
+                }
+
+                if (end < viewList.length) {
+                    if (forceScrollId) process(end);
+                    else requestAnimationFrame(() => process(end));
+                } else {
+                    if(window.location.hash && !forceScrollId) {
+                        const target = document.getElementById(window.location.hash.substring(1));
+                        if(target) setTimeout(() => target.scrollIntoView({behavior: 'auto', block: 'start'}), 300);
+                    }
+                }
+            };
+            
+            if (forceScrollId) process(0);
+            else requestAnimationFrame(() => process(0));
+        };
+
+        let toastId;
+        const showToast = (title, subtext = "") => {
+            const toast = document.getElementById("toast");
+            toast.innerHTML = `${title}${subtext ? `<span>${subtext}</span>` : ''}`;
+            toast.classList.add("show");
+            clearTimeout(toastId);
+            toastId = setTimeout(() => toast.classList.remove("show"), 2500);
+        };
+        
+        const extractTextFromData = (item) => {
+            return config.langs.map(l => {
+                const text = item.msgs[l];
+                if (text === undefined) return "";
+                return text === null ? `[${displayNames[l] || l}] [미번역]` : `[${displayNames[l] || l}] ${text.replace(/[&#]/g, " ").replace(/\\[a-zA-Z0-9~]|\^([0-9])/g, "")}`;
+            }).filter(x => x !== "").join('\n');
+        };
+
+        const copyTextHandler = (text, successMsg, previewText) => {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => showToast(successMsg, previewText)).catch(() => fallbackCopy(text, successMsg, previewText));
+            } else {
+                fallbackCopy(text, successMsg, previewText);
+            }
+        };
+
+        const fallbackCopy = (text, successMsg, previewText) => {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed"; ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand("copy");
+                showToast(successMsg, previewText);
+            } catch (err) {
+                showToast("복사 실패", "브라우저 권한을 확인해주세요.");
+            }
+            document.body.removeChild(ta);
+        };
+
+        let isShiftDown = false;
+        let currentHoverIdx = -1;
+
+        const updateShiftHighlight = () => {
+            document.querySelectorAll('.msg-group.shift-highlight').forEach(el => el.classList.remove('shift-highlight'));
+            if (!isShiftDown || lastActionIdx === -1 || currentHoverIdx === -1) return;
+            const start = Math.min(lastActionIdx, currentHoverIdx);
+            const end = Math.max(lastActionIdx, currentHoverIdx);
+            document.querySelectorAll('.msg-group').forEach(el => {
+                const idx = parseInt(el.dataset.idx);
+                if (idx >= start && idx <= end) el.classList.add('shift-highlight');
+            });
+        };
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Shift') { isShiftDown = true; updateShiftHighlight(); } });
+        document.addEventListener('keyup', (e) => { if (e.key === 'Shift') { isShiftDown = false; updateShiftHighlight(); } });
+        window.addEventListener('blur', () => { isShiftDown = false; updateShiftHighlight(); });
+        
+        document.getElementById("textboxes").addEventListener('mouseover', (e) => {
+            const group = e.target.closest('.msg-group');
+            if (group) { currentHoverIdx = parseInt(group.dataset.idx); updateShiftHighlight(); }
+        });
+
+        document.getElementById("textboxes").addEventListener("click", (e) => {
+            const contextBtn = e.target.closest(".jump-context-btn");
+            if (contextBtn) {
+                showLoader("문맥을 불러오는 중...", () => {
+                    document.getElementById("search-box").value = "";
+                    applyFilters(contextBtn.dataset.id);
+                });
+                return;
+            }
+
+            const btn = e.target.closest("button.copy-btn, button.link-btn");
+            if (!btn) return;
+
+            if (btn.classList.contains("link-btn")) {
+                const url = new URL(window.location.href);
+                url.hash = `msg-${btn.dataset.id}`;
+                copyTextHandler(url.toString(), "링크가 복사되었습니다.", "");
+                return;
+            }
+
+            const idx = parseInt(btn.dataset.idx);
+            const blockEl = btn.closest('.msg-group');
+
+            if (e.shiftKey && lastActionIdx !== -1) {
+                const start = Math.min(lastActionIdx, idx);
+                const end = Math.max(lastActionIdx, idx);
+                const copiedLines = [];
+                let msgCount = 0;
+
+                for (let i = start; i <= end; i++) {
+                    if (viewList[i].type === 'msg') {
+                        copiedLines.push(extractTextFromData(viewList[i]));
+                        msgCount++;
+                    }
+                }
+                
+                document.querySelectorAll('.msg-group.shift-highlight').forEach(el => {
+                    el.classList.remove('shift-highlight');
+                    el.classList.add('copied');
+                    setTimeout(() => el.classList.remove('copied'), 800);
+                });
+                
+                const resText = copiedLines.join('\n-----------------------\n');
+                if (copiedLines.length > 0) {
+                    copyTextHandler(resText, `총 ${msgCount}개의 대사가 일괄 복사되었습니다.`, copiedLines[0].substring(0, 50) + "...");
+                }
+            } else {
+                const text = extractTextFromData(viewList[idx]);
+                copyTextHandler(text, "대사가 복사되었습니다.", text.substring(0, 50) + "...");
+                
+                if (blockEl) {
+                    blockEl.classList.add("copied");
+                    setTimeout(() => blockEl.classList.remove("copied"), 800);
+                }
+            }
+            lastActionIdx = idx;
+            if (isShiftDown) updateShiftHighlight();
+        });
+
+       const scrollToId = (id) => {
+            window.history.pushState(null, null, `#${id}`);
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({behavior: 'auto', block: 'start'});
+            else applyFilters(id);
+        };
+
+        const buildToC = () => {
+            const tocList = document.getElementById("toc-list");
+            const html = [];
+            let inChap = false;
+
+            viewList.forEach(item => {
+                if (item.type === 'h1') {
+                    if (inChap) html.push(`</ul></li>`);
+                    html.push(`<li><a href="#${item.id}" style="font-weight:bold;">${item.title}</a><ul>`);
+                    inChap = true;
+                } else if (item.type === 'h2') {
+                    html.push(`<li><a href="#${item.id}">${item.title}</a></li>`);
+                }
+            });
+            if (inChap) html.push(`</ul></li>`);
+            
+            tocList.innerHTML = html.join("");
+            tocList.querySelectorAll("a").forEach(a => a.addEventListener("click", (e) => {
+                e.preventDefault();
+                document.getElementById("toc-sidebar").classList.remove("open");
+                document.getElementById("toc-overlay").classList.remove("open");
+                const id = a.getAttribute("href").substring(1);
+                showLoader("이동 중...", () => scrollToId(id));
+            }));
+        };
+
+        document.getElementById("toc-toggle-btn").addEventListener("click", () => {
+            document.getElementById("toc-sidebar").classList.add("open");
+            document.getElementById("toc-overlay").classList.add("open");
+        });
+        document.getElementById("toc-overlay").addEventListener("click", (e) => {
+            document.getElementById("toc-sidebar").classList.remove("open");
+            e.target.classList.remove("open");
+        });
+        
+        document.getElementById("toc-search").addEventListener("input", (e) => {
+            const term = e.target.value.toLowerCase();
+            Array.from(document.getElementById("toc-list").children).forEach(h1Li => {
+                const h1Match = h1Li.querySelector("a").innerText.toLowerCase().includes(term);
+                let anyH2 = false;
+                const ul = h1Li.querySelector("ul");
+                if (ul) Array.from(ul.children).forEach(h2Li => {
+                    const h2Match = h1Match || h2Li.querySelector("a").innerText.toLowerCase().includes(term);
+                    h2Li.style.display = h2Match ? "" : "none";
+                    if (h2Match) anyH2 = true;
+                });
+                h1Li.style.display = (h1Match || anyH2) ? "" : "none";
+            });
+        });
+
+        let activeAudio = null;
+        document.addEventListener("click", (e) => {
+            const voiced = e.target.closest(".voiced");
+            if (!voiced) return;
+            if (!voiced.dataset.ensound && !voiced.dataset.jasound) return;
+
+            activeAudio?.pause();
+            activeAudio = document.createElement("audio");
+            const enSnd = voiced.dataset.ensound, jaSnd = voiced.dataset.jasound, lang = voiced.dataset.lang;
+            const paths = [];
+
+            if (lang === "ko") {
+                if (enSnd) paths.push(`ko/${enSnd}_ko.wav`, `ko/${enSnd}_kr.wav`);
+            } else if (lang === "es") {
+                if (enSnd) paths.push(`es/${enSnd}.ogg`, `es/sp_${enSnd}.ogg`);
+            } else if (lang === "ru") {
+                if (enSnd) paths.push(`ru/${enSnd}.ogg`);
+            } else if (lang === "ja") {
+                if (jaSnd) paths.push(`${jaSnd}.mp3`, `${jaSnd}.opus`);
+                if (enSnd) paths.push(`${enSnd}_ja.mp3`, `${enSnd}_ja.opus`);
+            }
+            if (enSnd) paths.push(`${enSnd}.mp3`, `${enSnd}.opus`);
+
+            paths.forEach(p => activeAudio.appendChild(Object.assign(document.createElement('source'), { src: `static/snd/${p}` })));
+            activeAudio.play().catch(console.error);
+        });
+
+        initUI();
+        loadState();
+        buildMasterData();
+        applyFilters();
+
+    </script>
+</body>
+</html>
